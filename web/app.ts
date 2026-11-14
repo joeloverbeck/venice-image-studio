@@ -11,11 +11,13 @@ type Draft = {
 type Attempt = {
   id: string;
   created_at: string;
+  dispatched_at: string | null;
   status: string;
   summary: string;
   prompt: string;
   request: Record<string, any>;
   returned_seed: number | null;
+  can_retry_local_save: boolean;
   results: Array<{
     id: string;
     width: number;
@@ -23,6 +25,7 @@ type Attempt = {
     mime: string;
     bytes: number;
     sha256: string;
+    available: boolean;
   }>;
 };
 const el = <T extends HTMLElement>(id: string) =>
@@ -107,7 +110,8 @@ function render() {
   const model = chosen();
   const estimate = sameDraft() ? state.estimate : { unavailable_reason: "Waiting for validation of your current choices." };
   const settings = current.settings;
-  el("model").textContent = `${model?.name || current.model} (${current.model}) · ${settings.sizing === "pixels" ? `${settings.width} × ${settings.height} pixels` : `${settings.aspect_ratio || "ratio unselected"} · ${settings.resolution || "model-native resolution"}`} · ${settings.quality || "model-native quality"} · one image · ${settings.format?.toUpperCase() || "format unselected"} · safe mode ${current.safe_mode ? "ON" : "off"}`;
+  el("model").textContent = `${model?.name || current.model} (${current.model}) · ${settings.sizing === "pixels" ? `${settings.width} × ${settings.height} pixels` : `${settings.aspect_ratio || "ratio unselected"} · ${settings.resolution || "model-native resolution"}`} · ${settings.quality || "model-native quality"} · ${settings.variants} image${settings.variants === 1 ? "" : "s"} · ${settings.format?.toUpperCase() || "format unselected"} · safe mode ${current.safe_mode ? "ON" : "off"}`;
+  generate.textContent = settings.variants === 1 ? "Generate one image" : `Generate ${settings.variants} images`;
   el("model-warning").textContent = `${model?.availability || "unknown"}. ${model?.guidance?.fit || "No reviewed guidance available."}`;
   renderSettings();
   const conflicts = el("preflight"); conflicts.replaceChildren();
@@ -149,9 +153,13 @@ const refreshLibrary = libraryView(api, id => {
 }, notice);
 function show(a: Attempt) {
   selected = a.id;
-  el("requested").textContent = `Requested: ${a.request.model} · ${a.request.width ? `${a.request.width} × ${a.request.height} pixels` : `${a.request.aspect_ratio} · ${a.request.resolution || "model-native resolution"}`} · ${a.request.quality || "model-native quality"} · ${a.request.format}. Actual result dimensions appear below.`;
+  el("requested").textContent = `Requested: ${a.request.model} · ${a.request.width ? `${a.request.width} × ${a.request.height} pixels` : `${a.request.aspect_ratio} · ${a.request.resolution || "model-native resolution"}`} · ${a.request.quality || "model-native quality"} · ${a.request.format} · ${a.request.variants} images. Actual result dimensions appear below.`;
   el("requested").textContent += ` Seed requested: ${a.request.seed === undefined ? "omitted/random (schema default is uncertain)" : a.request.seed}; provider-returned seed: ${a.returned_seed ?? "unknown"}.`;
   el("result-status").textContent = `${a.status}: ${a.summary}`;
+  if (a.status === "waiting" && a.dispatched_at) {
+    const seconds = Math.max(0, Math.floor((Date.now() - Date.parse(a.dispatched_at)) / 1000));
+    el("result-status").textContent += ` Elapsed ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}. No completion time is known.`;
+  }
   el("recipe").textContent = JSON.stringify(a, null, 2);
   const images = el("images");
   if (
@@ -161,13 +169,19 @@ function show(a: Attempt) {
     images.dataset.attempt = a.id;
     images.replaceChildren();
     for (const r of a.results) {
+      if (r.available === false) {
+        const missing = document.createElement("figure");
+        missing.append(text("p", `Original unavailable after interruption (${r.width} × ${r.height}). Missing or damaged bytes cannot be recovered by generating again.`));
+        images.append(missing);
+        continue;
+      }
       const figure = document.createElement("figure"),
         image = document.createElement("img"),
         caption = document.createElement("figcaption"),
         download = document.createElement("a");
       image.src = `/api/images/${r.id}`;
       image.alt = "Generated original";
-      caption.textContent = `${r.width} × ${r.height} · ${r.mime} · ${r.bytes.toLocaleString()} bytes`;
+      caption.textContent = `Scaled original · ${r.width} × ${r.height} · ${r.mime} · ${r.bytes.toLocaleString()} bytes`;
       download.href = image.src;
       download.download = `${r.id}.${r.mime.split("/")[1]}`;
       download.className = "download";
@@ -176,7 +190,6 @@ function show(a: Attempt) {
       inspect.className = "secondary"; inspect.textContent = "Inspect original";
       inspect.onclick = () => inspectOriginal(r, a.prompt, a.request);
       image.loading = "lazy"; image.decoding = "async";
-      image.alt = "Original shown scaled to fit; choose Inspect original for detail";
       figure.append(image, caption, inspect, download);
       images.append(figure);
     }
@@ -213,8 +226,13 @@ function show(a: Attempt) {
       notice(e);
     }
   };
+  let spending = actions.querySelector<HTMLParagraphElement>(".spending-note");
+  if (!spending) {
+    spending = document.createElement("p"); spending.className = "spending-note"; actions.append(spending);
+  }
+  spending.textContent = "Using a recipe makes a new draft only. Generate submits a new paid attempt; a previous failed or interrupted attempt may already have been charged. Provider suggestions and retry advice never change or resubmit your draft.";
   let save = actions.querySelector<HTMLButtonElement>(".retry-save");
-  if (a.status === "save_failed") {
+  if (a.status === "save_failed" && a.can_retry_local_save !== false) {
     if (!save) {
       save = document.createElement("button");
       save.className = "retry-save";
@@ -371,6 +389,7 @@ function renderSettings(force = false) {
   if (c.resolutions.length || settings.resolution) control("resolution", "Resolution tier", c.resolutions);
   if (c.qualities.length || settings.quality) control("quality", "Quality", c.qualities);
   control("format", "Original format", c.formats);
+  control("variants", "Images per attempt", undefined, { advanced: true, min: c.variants_min, max: c.variants_max });
   control("seed", "Explicit seed (blank = omit/random)", undefined, { advanced: true, supported: c.seed === "documented", min: -999999999, max: 999999999 });
   control("negative_prompt", "Negative prompt", undefined, { advanced: true, type: "text", supported: c.negative_prompt === "documented" });
   control("steps", "Inference steps", undefined, { advanced: true, supported: c.steps === "documented", min: 1, max: c.steps_max });
@@ -399,6 +418,9 @@ el("model-defaults").onclick = () => {
     prompt.value = current.prompt;
     safe.checked = current.safe_mode;
     render();
+    prompt.disabled = false; safe.disabled = false;
+    for (const id of ["browse-models", "model-defaults", "refresh", "library-search", "library-order"]) el<HTMLButtonElement>(id).disabled = false;
+    el("draft-status").textContent = "Saved draft loaded.";
     setInterval(() => reload().catch(notice), 1500);
   } catch (e) {
     notice(e);

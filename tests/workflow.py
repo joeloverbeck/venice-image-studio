@@ -101,6 +101,27 @@ class Workflow(unittest.TestCase):
         self.assertEqual(len(Provider.requests),1)
         self.assertEqual(self.call('/api/attempts/'+a['id']),recipe)
 
+    def test_variants_price_request_partial_originals_and_reuse(self):
+        d=self.draft();d['settings']={'variants':3}
+        self.call('/api/draft',d,'PUT');self.state=self.call('/api/state')
+        self.assertEqual(self.state['estimate']['usd'],0.06)
+        Provider.response={'images':[base64.b64encode(PNG).decode(),base64.b64encode(PNG).decode()], 'content_policy_violation_count':1}
+        a=self.finish(self.call('/api/generate',{'draft_id':d['id']})['id'])
+        self.assertEqual(Provider.requests[0][1]['variants'],3)
+        self.assertEqual(a['request']['variants'],3)
+        self.assertEqual(a['outcome'],'partial')
+        self.assertIn('2 of 3',a['summary']);self.assertIn('1 omitted',a['summary'])
+        self.assertEqual(len(a['results']),2)
+        for r in a['results']:self.assertEqual(self.call('/api/images/'+r['id'],raw=True),PNG)
+        self.stop();self.start()
+        self.assertEqual(self.call('/api/attempts/'+a['id']),a)
+        reused=self.call('/api/attempts/'+a['id']+'/reuse',{})
+        self.assertEqual(reused['settings']['variants'],3)
+        reused['settings']['variants']=5
+        self.call('/api/draft',reused,'PUT')
+        with self.assertRaises(urllib.error.HTTPError):self.call('/api/generate',{'draft_id':reused['id']})
+        self.assertEqual(len(Provider.requests),1)
+
     def test_ratio_quality_selection_reaches_request_and_durable_reuse(self):
         Provider.catalog=[{'id':'grok-imagine-image-2-0','model_spec':{
             'name':'Grok Imagine 2.0','offline':False,'privacy':'private',
@@ -363,6 +384,21 @@ class Workflow(unittest.TestCase):
         self.call('/api/generate',{'draft_id':d['id']})
         self.assertEqual(len(Provider.requests),1)
 
+    def test_insufficient_space_blocks_dispatch_and_retains_the_draft(self):
+        self.stop()
+        fault=pathlib.Path(self.tmp.name)/'space-fault.so'
+        marker=pathlib.Path(self.tmp.name)/'space-low'
+        subprocess.run(['cc','-shared','-fPIC',str(ROOT/'tests/space_fault.c'),'-o',str(fault),'-ldl'],check=True)
+        self.extra_env={'LD_PRELOAD':str(fault),'VENICE_TEST_SPACE_MARKER':str(marker)}
+        self.start();d=self.draft();marker.touch()
+        with self.assertRaises(urllib.error.HTTPError) as failure:self.call('/api/generate',{'draft_id':d['id']})
+        self.assertIn('256 MiB',failure.exception.read().decode())
+        self.assertEqual(self.call('/api/state')['draft']['prompt'],d['prompt'])
+        self.assertEqual(Provider.requests,[])
+        marker.unlink()
+        a=self.finish(self.call('/api/generate',{'draft_id':d['id']})['id'])
+        self.assertEqual(a['status'],'saved');self.assertEqual(len(Provider.requests),1)
+
     def test_late_save_failure_keeps_download_and_retry_never_generates(self):
         Provider.delay=.5
         d=self.draft();a=self.call('/api/generate',{'draft_id':d['id']})
@@ -394,6 +430,32 @@ class Workflow(unittest.TestCase):
         self.assertEqual(self.library.stat().st_mode&0o777,0o700)
         self.assertEqual((self.library/(a['id']+'.recipe.json')).stat().st_mode&0o777,0o600)
 
+    def test_structured_refusal_and_errors_have_actionable_distinct_summaries(self):
+        cases=[
+            (422,{'error':'Synthetic provider explanation','retryable':False,'suggested_prompt':'<script>advice only</script>','recommended_model':'other','credits_refunded':True},'refused','policy'),
+            (422,{'error':'Invalid size','details':{'_errors':[], 'width':{'_errors':['invalid size']}}},'invalid_settings','settings'),
+            (422,{'error':'This prose mentions a content policy but is not a structured verdict'},'rejected','not assumed'),
+            (402,{'error':{'code':'UNKNOWN_PAYMENT_SHAPE'}},'payment_error','payment'),
+            (402,{'error':'balance','code':'INSUFFICIENT_BALANCE'},'balance_error','balance'),
+            (402,{'error':'key limit','code':'API_KEY_USD_SPEND_LIMIT_EXCEEDED'},'key_limit_error','spend limit'),
+            (422,{'code':'CONTENT_POLICY_VIOLATION'},'refused','No specific reason'.lower()),
+            (422,{'code':'IMAGE_TOO_LARGE'},'invalid_settings','settings'),
+            (503,{'unfamiliar':{'detail':'synthetic service error'}},'provider_error','provider'),
+            (429,{'error':'slow down','retryable':True},'rate_limited','retry'),
+        ]
+        for status,body,outcome,word in cases:
+            with self.subTest(status=status,body=body):
+                Provider.status=status;Provider.response=body;Provider.response_headers={'retry-after':'17','x-request-id':'synthetic-error'}
+                d=self.draft();a=self.finish(self.call('/api/generate',{'draft_id':d['id']})['id'])
+                self.assertEqual(a['outcome'],outcome);self.assertIn(word,a['summary'].lower())
+                self.assertEqual(a['provider']['body'],body)
+                self.assertEqual(self.call('/api/state')['draft']['prompt'],d['prompt'])
+                if 'credits_refunded' in body:
+                    self.assertEqual(a['billing']['provider_assertions']['credits_refunded'],True)
+                    self.assertIn('unverified',a['summary'])
+                else:self.assertEqual(a['billing']['refund'],'unknown')
+        self.assertEqual(len(Provider.requests),len(cases))
+
     def test_flagged_original_explained_and_legacy_recipe_read_without_rewrite(self):
         Provider.response_headers={'x-venice-is-blurred':'true','x-venice-is-content-violation':'true'}
         d=self.draft();a=self.finish(self.call('/api/generate',{'draft_id':d['id']})['id'])
@@ -406,6 +468,8 @@ class Workflow(unittest.TestCase):
         path=self.library/(a['id']+'.recipe.json')
         legacy=json.loads(path.read_bytes())
         legacy.update(outcome='received',outcome_summary='Received originals; saving locally.',summary='Originals and recipe saved locally.')
+        for key in ['counts','can_retry_local_save']:legacy.pop(key,None)
+        for result in legacy['results']:result.pop('available',None)
         path.write_text(json.dumps(legacy));before=path.read_bytes()
         self.start();reopened=self.call('/api/attempts/'+a['id'])
         self.assertEqual(reopened['outcome'],'flagged')
@@ -431,6 +495,60 @@ class Workflow(unittest.TestCase):
         self.assertIsNotNone(refreshed['catalog_error']);self.assertEqual(refreshed['catalog'],previous)
         self.assertEqual(len(Provider.requests),1)
 
+    def test_nonempty_explanation_shapes_are_retained_without_claiming_absence(self):
+        cases=[
+            (400, 'Synthetic JSON string explanation'),
+            (400, {'details':{'_errors':[], 'image':{'_errors':['Invalid image field']}, 'images':{'_errors':['Invalid count']}}}),
+            (422, {'issues':[{'path':['width'],'message':'Invalid dimension'}]}),
+        ]
+        for status,body in cases:
+            with self.subTest(body=body):
+                Provider.status=status;Provider.response=body
+                d=self.draft();a=self.finish(self.call('/api/generate',{'draft_id':d['id']})['id'])
+                self.assertEqual(a['provider']['body'],body)
+                self.assertNotIn('No specific reason',a['summary'])
+        Provider.raw_body=b'Synthetic plain-text explanation';Provider.status=502
+        d=self.draft();a=self.finish(self.call('/api/generate',{'draft_id':d['id']})['id'])
+        self.assertEqual(a['provider']['body']['raw_text'],'Synthetic plain-text explanation')
+        self.assertNotIn('No specific reason',a['summary'])
+        self.assertEqual(len(Provider.requests),4)
+
+    def test_bounded_unknown_and_plain_text_evidence_preserves_flags_and_unknowns(self):
+        for payload in [b'Plain synthetic provider error <script>not code</script>', b'["unknown", {"shape": true}]']:
+            Provider.status=502;Provider.raw_body=payload
+            d=self.draft();a=self.finish(self.call('/api/generate',{'draft_id':d['id']})['id'])
+            body=a['provider']['body']
+            if payload.startswith(b'['):self.assertEqual(body,['unknown',{'shape':True}])
+            else:self.assertEqual(body['raw_text'],payload.decode())
+            self.assertEqual(a['outcome'],'provider_error');self.assertEqual(a['billing']['refund'],'unknown')
+        Provider.status=200;Provider.raw_body=None
+        Provider.response={'images':[base64.b64encode(PNG).decode()], 'error':{}, 'unknown_detail':'offline-test'+('x'*60000),'refund':{'assertion':'unknown provider shape'}}
+        Provider.response_headers={'x-venice-is-blurred':'true','x-venice-is-content-violation':'true'}
+        d=self.draft();a=self.finish(self.call('/api/generate',{'draft_id':d['id']})['id'])
+        self.assertTrue(a['provider']['capture_truncated'])
+        self.assertIn('blurred',a['summary']);self.assertIn('content violation',a['summary'])
+        self.assertIn('truncated',a['summary']);self.assertIn('unverified',a['summary'])
+        self.assertNotIn('offline-test',json.dumps(a));self.assertNotIn('saving locally',a['summary'])
+        self.assertEqual(self.call('/api/images/'+a['results'][0]['id'],raw=True),PNG)
+        self.assertLess(len(json.dumps(a['provider'])),32768)
+        self.assertEqual(len(Provider.requests),3)
+
+    def test_no_pixel_policy_inference_and_conflicting_omission_counts_stay_distinct(self):
+        black=b'\x89PNG\r\n\x1a\n'+chunk(b'IHDR',struct.pack('>IIBBBBB',1,1,8,6,0,0,0))+chunk(b'IDAT',zlib.compress(b'\0\0\0\0\xff'))+chunk(b'IEND',b'')
+        Provider.response={'images':[base64.b64encode(black).decode()]}
+        d=self.draft();a=self.finish(self.call('/api/generate',{'draft_id':d['id']})['id'])
+        self.assertEqual(a['outcome'],'received');self.assertNotIn('violation',a['summary'])
+        Provider.response['content_policy_violation_count']=1
+        Provider.response_headers={'x-venice-content-violation-count':'2'}
+        d=self.draft();d['settings']={'variants':4};self.call('/api/draft',d,'PUT')
+        a=self.finish(self.call('/api/generate',{'draft_id':d['id']})['id'])
+        self.assertEqual(a['outcome'],'partial');self.assertIsNone(a['counts']['provider_omitted'])
+        self.assertTrue(a['counts']['omission_count_conflict']);self.assertIn('conflict',a['summary'])
+        self.assertEqual(a['provider']['body']['content_policy_violation_count'],1)
+        self.assertEqual(a['provider']['headers']['x-venice-content-violation-count'],'2')
+        self.assertEqual(self.call('/api/images/'+a['results'][0]['id'],raw=True),black)
+        self.assertEqual(len(Provider.requests),2)
+
     def test_redirects_and_invalid_images_never_trigger_fallback(self):
         Provider.status=302;Provider.response_headers={'Location':f'http://127.0.0.1:{self.provider.server_port}/elsewhere'}
         Provider.response={'error':'inspect this suggestion', 'retryable':True, 'recommended_model':'another-model'}
@@ -440,7 +558,7 @@ class Workflow(unittest.TestCase):
         d=self.draft();a=self.finish(self.call('/api/generate',{'draft_id':d['id']})['id'])
         self.assertEqual(a['status'],'failed');self.assertEqual(a['results'],[]);self.assertEqual(len(Provider.requests),2)
     def test_save_retry_preserves_known_rejection_outcome(self):
-        Provider.delay=.3;Provider.status=422;Provider.response={'error':'Invalid settings','retryable':False}
+        Provider.delay=.3;Provider.status=422;Provider.response={'error':'Invalid settings'}
         d=self.draft();a=self.call('/api/generate',{'draft_id':d['id']})
         self.library.chmod(0o500)
         try:
@@ -458,6 +576,37 @@ class Workflow(unittest.TestCase):
         recovered=self.call('/api/attempts/'+a['id'])
         self.assertEqual(recovered['status'],'saved')
         self.assertEqual(self.call('/api/images/'+recovered['results'][0]['id'],raw=True),PNG)
+        self.assertEqual(len(Provider.requests),1)
+
+    def test_crash_after_first_variant_exposes_available_original_and_lost_bytes(self):
+        self.stop();self.extra_env={'VENICE_STUDIO_TEST_CRASH_AFTER_ORIGINAL':'1'};self.start()
+        Provider.response={'images':[base64.b64encode(PNG).decode(),base64.b64encode(PNG).decode()]}
+        d=self.draft();d['settings']={'variants':2};self.call('/api/draft',d,'PUT')
+        a=self.call('/api/generate',{'draft_id':d['id']})
+        self.assertEqual(self.process.wait(timeout=2),86);self.log.close()
+        self.extra_env={};self.start();a=self.call('/api/attempts/'+a['id'])
+        self.assertEqual(a['status'],'save_failed')
+        self.assertEqual([r['available'] for r in a['results']],[True,False])
+        self.assertFalse(a['can_retry_local_save'])
+        self.assertIn('1 of 2',a['summary']);self.assertIn('missing',a['summary'])
+        self.assertEqual(self.call('/api/images/'+a['results'][0]['id'],raw=True),PNG)
+        with self.assertRaises(urllib.error.HTTPError):self.call('/api/images/'+a['results'][1]['id'],raw=True)
+        self.assertEqual(len(Provider.requests),1)
+
+    def test_interrupted_json_retains_complete_originals_without_replay(self):
+        encoded=base64.b64encode(PNG).decode()
+        Provider.raw_body=('{"id":"synthetic-interrupted","images":["'+encoded+'","incomplete').encode()
+        Provider.response_headers={'Content-Length':'10000','x-request-id':'interrupted-with-original'}
+        d=self.draft();d['settings']={'variants':2};self.call('/api/draft',d,'PUT')
+        a=self.finish(self.call('/api/generate',{'draft_id':d['id']})['id'])
+        self.assertEqual(a['outcome'],'partial');self.assertEqual(a['status'],'saved')
+        self.assertEqual(len(a['results']),1)
+        self.assertIn('incomplete',a['summary']);self.assertIn('unknown',a['summary'])
+        self.assertTrue(a['provider']['body']['body_incomplete'])
+        self.assertNotIn(encoded,json.dumps(a));self.assertNotIn('raw_text',a['provider']['body'])
+        self.assertEqual(self.call('/api/images/'+a['results'][0]['id'],raw=True),PNG)
+        self.stop();self.start()
+        self.assertEqual(self.call('/api/images/'+a['results'][0]['id'],raw=True),PNG)
         self.assertEqual(len(Provider.requests),1)
 
     def test_incomplete_body_retains_status_identity_and_unknown_outcome(self):

@@ -20,24 +20,25 @@
         <label for="prompt">Describe the image</label
         ><textarea
           id="prompt"
+          disabled
           rows="16"
           placeholder="Write your full prompt…"
         ></textarea>
         <p id="count"></p>
-        <p id="draft-status" role="status"></p>
+        <p id="draft-status" role="status">Loading saved draft…</p>
         <div class="options">
           <h2>Generation</h2>
           <p id="model"></p>
-          <button id="browse-models" class="secondary">Browse and compare models</button>
-          <button id="model-defaults" class="secondary">Use this model’s documented defaults</button>
+          <button id="browse-models" class="secondary" disabled>Browse and compare models</button>
+          <button id="model-defaults" class="secondary" disabled>Use this model’s documented defaults</button>
           <p id="model-warning"></p>
           <div id="settings"></div>
-          <label><input id="safe" type="checkbox" /> Safe mode</label>
+          <label><input id="safe" type="checkbox" disabled /> Safe mode</label>
           <p>Enhancement off. Optional search and optimization start off. Model-internal rewriting may still occur.</p>
           <div id="preflight" role="status" aria-live="polite"></div>
           <p id="estimate"></p>
-          <button id="refresh" class="secondary">Refresh catalog</button
-          ><button id="generate">Generate one image</button>
+          <button id="refresh" class="secondary" disabled>Refresh catalog</button
+          ><button id="generate" disabled>Generate one image</button>
         </div>
         <details>
           <summary>Local retention and privacy</summary>
@@ -53,9 +54,9 @@
         <p id="library-path"></p>
         <p>Kept locally without automatic cleanup. Provider retention claims do not remove your saved work.</p>
         <label for="library-search">Search saved prompts or models</label>
-        <input id="library-search" type="search" placeholder="Prompt text, model name or ID…" />
+        <input id="library-search" type="search" disabled placeholder="Prompt text, model name or ID…" />
         <label for="library-order">Date order</label>
-        <select id="library-order"><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select>
+        <select id="library-order" disabled><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select>
         <p id="library-count" role="status"></p>
         <div id="attempts"></div>
       </section>
