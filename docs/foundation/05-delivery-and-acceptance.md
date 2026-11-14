@@ -14,6 +14,16 @@ appetite, constraints, real consumer, verification method and publication scope
 in its issue. A readiness label or research chapter does not activate work.
 Ordinary engineering decisions within accepted scope remain delegated.
 
+On 2026-11-14 the owner selected VectorCraft MCP for mock-ups and authorized
+checking its installation and rebuilding from `main`. This bounded tool setup
+serves UI design, ends at a verified MCP create/save/export/reopen path and a
+build of the desktop app, and does not activate application implementation or
+paid calls. Setup and artifact locations are documented in the README. Consulted
+rules: PURP-1 through PURP-6; WORK-1 through WORK-6; EVID-1 through EVID-10;
+SEM-1 and SEM-2; REP-1 through REP-3; BOUND-1 through BOUND-5; INT-1 through
+INT-4; AGENT-1 through AGENT-5; OPS-1 through OPS-7; AUTH-1 through AUTH-3;
+GOV-1 through GOV-3. Changes remain local; no publication is selected here.
+
 The full constitution was consulted for founding. Relevant rule identifiers:
 AUTH-1 through AUTH-3; PURP-1; WORK; EVID; SEM; REP; BOUND; INT; AGENT;
 OPS; PUB; GOV-1 and GOV-2; ADOPT. Namespace references mean their applicable

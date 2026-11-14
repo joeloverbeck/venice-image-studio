@@ -66,6 +66,11 @@ use the current issue and the acceptance boundary in
 
 ## Agent skills
 
+### Mock-ups
+
+Use VectorCraft MCP for UI mock-ups. Before authoring or troubleshooting them,
+read the setup and artifact conventions in `README.md` under **Mock-ups**.
+
 ### Issue tracker
 
 Use GitHub Issues in `joeloverbeck/venice-image-studio`; before tracker operations,

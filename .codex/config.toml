@@ -1,0 +1,9 @@
+[mcp_servers.vectorcraft]
+command = "sh"
+args = ["-c", '''
+exec "${CARGO_HOME:-$HOME/.cargo}/bin/vectorcraft-cli" mcp --headless \
+  --automation-read-root "${XDG_DATA_HOME:-$HOME/.local/share}/venice-image-studio/mockups" \
+  --automation-write-root "${XDG_DATA_HOME:-$HOME/.local/share}/venice-image-studio/mockups"
+''']
+startup_timeout_sec = 60
+tool_timeout_sec = 120
