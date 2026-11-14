@@ -177,15 +177,7 @@ impl Provider {
                             .as_str()
                             .unwrap()
                             .to_owned();
-                        let value = if [
-                            "authorization",
-                            "api_key",
-                            "access_token",
-                            "token",
-                            "secret",
-                        ]
-                        .contains(&key.to_lowercase().as_str())
-                        {
+                        let value = if sensitive_field(key) {
                             json!("[redacted]")
                         } else {
                             self.redact_metadata(value)
@@ -220,15 +212,7 @@ impl Provider {
                                 .as_str()
                                 .unwrap()
                                 .to_owned(),
-                            if [
-                                "authorization",
-                                "api_key",
-                                "access_token",
-                                "token",
-                                "secret",
-                            ]
-                            .contains(&k.to_lowercase().as_str())
-                            {
+                            if sensitive_field(k) {
                                 json!("[redacted]")
                             } else {
                                 self.redact(v)
@@ -240,6 +224,16 @@ impl Provider {
             v => v.clone(),
         }
     }
+}
+fn sensitive_field(key: &str) -> bool {
+    [
+        "authorization",
+        "api_key",
+        "access_token",
+        "token",
+        "secret",
+    ]
+    .contains(&key.to_lowercase().as_str())
 }
 // This visitor recovers only complete top-level native response members and
 // complete elements of its images array. It is not a repair parser.

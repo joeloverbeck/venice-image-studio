@@ -3,7 +3,7 @@
 A local image studio for Venice AI: Rust application logic, a thin
 TypeScript browser interface, and a permanent image library outside the checkout.
 
-**Status: complete-workflow candidate awaiting final owner evaluation.**
+**Status: complete-workflow candidate.**
 The Writing desk supports the current catalog, dated model guidance, validated
 model-specific controls, original inspection, failure recovery, and a searchable
 saved library with recipe reuse. Real Chroma and Grok checkpoints are recorded in
@@ -11,8 +11,8 @@ saved library with recipe reuse. Real Chroma and Grok checkpoints are recorded i
 [issue #3](https://github.com/joeloverbeck/venice-image-studio/issues/3).
 Offline checks establish client mechanics, not model quality, effective seeds,
 provider guarantees or comfortable recurrent use. [Issue #1](https://github.com/joeloverbeck/venice-image-studio/issues/1)
-owns the complete delivery and acceptance boundary; the final joined evaluation
-is tracked in [issue #6](https://github.com/joeloverbeck/venice-image-studio/issues/6).
+owns the complete delivery and acceptance boundary; joined-workflow evidence and
+owner evaluation are tracked in [issue #6](https://github.com/joeloverbeck/venice-image-studio/issues/6).
 
 The candidate supports long prompts within each model's advertised limits,
 informed model selection, appropriate sizing and seed controls, image inspection,

@@ -1,5 +1,6 @@
 """Joined Writing desk checks through the browser and actual Rust application."""
 import base64
+import json
 import os
 import pathlib
 import subprocess
@@ -24,6 +25,20 @@ class WritingDesk(unittest.TestCase):
 
     def test_keyboard_model_selection_and_controls_keep_focus(self):
         self.browser('keyboard')
+        self.assertEqual(seam.Provider.requests, [])
+
+    def test_numeric_draft_edit_survives_reload_before_blur(self):
+        self.browser('draft-number')
+        self.assertEqual(seam.Provider.requests, [])
+
+    def test_advanced_text_and_seed_edits_preserve_draft_and_validation(self):
+        seam.Provider.catalog = json.loads((seam.ROOT / 'docs/research/models-2026-11-14.json').read_text())['models']
+        self.call('/api/catalog/refresh', {})
+        self.browser('draft-advanced')
+        self.assertEqual(seam.Provider.requests, [])
+
+    def test_saved_status_waits_for_the_current_edit(self):
+        self.browser('draft-status')
         self.assertEqual(seam.Provider.requests, [])
 
     def test_waiting_status_remains_visible_during_library_inspection(self):

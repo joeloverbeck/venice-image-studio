@@ -72,6 +72,9 @@ function counter() {
       ? " · Above the generic 7,500-character schema; provider acceptance is unverified."
       : "");
 }
+function incompleteNumber() {
+  return Array.from(document.querySelectorAll<HTMLInputElement>('#settings input[type="number"]')).some(input => input.validity.badInput);
+}
 function edited() {
   if (!dirty) {
     current = { ...current, id: crypto.randomUUID() };
@@ -82,17 +85,21 @@ function edited() {
   counter();
   renderSettings();
   generate.disabled = true;
-  el("draft-status").textContent = "Saving draft…";
+  el("draft-status").textContent = incompleteNumber()
+    ? "Draft not saved. Complete the invalid number before leaving this window."
+    : "Saving draft…";
   saving = saving
     .catch(() => { })
     .then(async () => {
+      if (incompleteNumber()) return;
       const snapshot = structuredClone(current);
       try {
         await api("/api/draft", snapshot, "PUT");
+        const savedState = await api("/api/state");
         if (
-          JSON.stringify(snapshot) === JSON.stringify(current)
+          !incompleteNumber() && JSON.stringify(snapshot) === JSON.stringify(current)
         ) {
-          state = await api("/api/state");
+          state = savedState;
           dirty = false;
           el("draft-status").textContent = "Draft saved locally.";
           render();
@@ -396,10 +403,12 @@ function renderSettings(force = false) {
       if (key === "cfg_scale") input.step = "any";
     }
     input.disabled = !supported;
-    input.onchange = () => {
+    const changed = () => {
       settings[key] = input instanceof HTMLInputElement && input.type === "checkbox" ? input.checked : input.value === "" ? null : input instanceof HTMLInputElement && input.type === "number" ? Number(input.value) : input.value;
       edited();
     };
+    if (input instanceof HTMLInputElement && input.type !== "checkbox") input.oninput = changed;
+    else input.onchange = changed;
     label.append(input);
     if (!supported) {
       label.append(text("small", `Unavailable: ${c[key] || "support not established"}. ${c.control_notes?.[key] || ""}`));
