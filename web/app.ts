@@ -324,14 +324,18 @@ function renderModelDetail() {
   for (const source of m.guidance.sources || []) { const p = document.createElement("p"); p.append(sourceLink(source.title, source.url)); detail.append(p); }
 }
 function renderSettings(force = false) {
-  const m = chosen(); const c = m?.contract; const key = JSON.stringify([current.model, c]);
+  const m = chosen(); const c = m?.contract; const key = JSON.stringify([current.model, c, state.styles?.data]);
+  const stylesStatus = `Styles fetched ${state.styles?.fetched_at || "never"}; age ${cacheAge(state.styles_age_seconds)}. ${state.styles_error || ""}`;
+  // Age and refresh status change without changing controls; retain their focus.
+  const status = document.getElementById("styles-status");
+  if (status) status.textContent = stylesStatus;
   if (!force && controlsKey === key) return;
   controlsKey = key;
-  const container = el("settings"); container.replaceChildren();
+  const container = el("settings"); const advancedOpen = container.querySelector("details")?.open || false; container.replaceChildren();
   if (!c) return;
   const settings = current.settings;
   const basic = document.createElement("div"); basic.className = "settings-grid";
-  const advanced = document.createElement("details"); advanced.append(text("summary", "Advanced controls"));
+  const advanced = document.createElement("details"); advanced.open = advancedOpen; advanced.append(text("summary", "Advanced controls"));
   function control(key: string, title: string, choices?: string[], options: { advanced?: boolean, type?: string, supported?: boolean, min?: number, max?: number } = {}) {
     const supported = options.supported !== false;
     const label = document.createElement("label"); label.textContent = title;
@@ -381,7 +385,7 @@ function renderSettings(force = false) {
   control("web_search", "Web search", undefined, { advanced: true, type: "checkbox", supported: c.web_search });
   control("optimize_prompt", "Optional optimization / thinking", undefined, { advanced: true, type: "checkbox", supported: c.optimize_prompt });
   for (const limitation of c.limitations || []) advanced.append(text("p", limitation));
-  advanced.append(text("p", `Styles fetched ${state.styles?.fetched_at || "never"}; age ${cacheAge(state.styles_age_seconds)}. ${state.styles_error || ""}`));
+  const styleStatus = text("p", stylesStatus); styleStatus.id = "styles-status"; advanced.append(styleStatus);
   container.append(basic, advanced);
 }
 el("browse-models").onclick = () => { renderBrowser(); browser.showModal(); };
