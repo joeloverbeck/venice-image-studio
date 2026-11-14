@@ -47,10 +47,21 @@ Transport HTTPS is different from client-to-model end-to-end encryption.
 | `chroma` | [Venice describes uncensored photographic generation](https://docs.venice.ai/models/chroma) |
 | `seedream-v4` | [Venice describes its V4.5 deployment as uncensored](https://docs.venice.ai/models/seedream-v4-5) |
 
-There is no universal `uncensored: true/false` capability in the captured catalog.
-For other models, this sweep did not establish an equivalent model-specific
-uncensored claim. That is an unknown, not a categorical “censored” label.
-Platform-wide promotional wording must not overwrite route-specific evidence.
+The table above records six model-page descriptions. Reconciliation during the
+2026-11-14 design interview found additional evidence already present in the
+[saved catalog extract](models-2026-11-14.json): `model_spec.uncensored: true`
+appears on 14 of the 48 generation models. Those IDs are `seedream-v5-5`,
+`krea-2-turbo`, `seedream-v4`, `seedream-v5-lite`, `seedream-v5-pro`,
+`lustify-sdxl`, `lustify-v7`, `lustify-v8`, `wai-Illustrious`, `chroma`,
+`qwen-image-3`, `qwen-image-3-pro`, `qwen-image-2-1-turbo`, and
+`qwen-image-2-1-pro`. The remaining 34 entries omit that field; none supplies
+false. The earlier six-description count was not complete claim coverage.
+
+A positive catalog flag is a dated Venice claim, separately attributable from
+model-page wording or a selection trait. A missing flag is unknown, not a
+categorical “censored” label. Neither source establishes refusal-free behavior.
+Runtime discovery must preserve new or conflicting claims and their sources;
+platform-wide promotional wording must not overwrite route-specific evidence.
 An upstream vendor policy may help explain possible restrictions, but should
 not be presented as proof of the exact reason Venice returned a refusal.
 

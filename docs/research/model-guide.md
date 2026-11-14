@@ -20,7 +20,7 @@ the owner's task. Runtime discovery must replace this snapshot when it changes.
 | Very long, structured scene briefs | Nano Banana Pro/2.1; FLUX.3 | Largest advertised capacities, but >7,500 acceptance is not verified here |
 | Anime | Anime (WAI); compare general models on the owner's style | WAI's 1,500-character cap remains, despite the native endpoint |
 | Painterly work | Venice SD35; general models with a clear medium/style brief | SD35 also retains a 1,500-character cap |
-| Models expressly advertised uncensored | Lustify variants, WAI, Chroma, Seedream V4.5 | Claims differ from guaranteed acceptance; six model-specific claims found |
+| Models expressly advertised uncensored | Inspect all 14 positive catalog claims below; examples include Chroma, Lustify, WAI, Seedream and Qwen variants | Exact IDs and sources matter; a claim does not guarantee acceptance |
 | Fast iteration before a final choice | Z-Image Turbo, Krea 2 Turbo, Qwen Image 2.1 Turbo | Speed/cost positioning is not proof of strongest final quality |
 
 These shortlists are inferences from the linked descriptions. They are optional
@@ -36,6 +36,10 @@ comparison against all newer models.
   label or an independently audited guarantee. [Privacy evidence](privacy-and-refusals.md)
 - **Uncensored claim not established** means no model-specific assertion found
   in this sweep, not a determination that a model always refuses adult content.
+  The saved catalog contains 14 positive `model_spec.uncensored` flags and 34
+  omissions, with no false values. Reconciliation on 2026-11-14 corrected the
+  earlier prose, which counted only six model-page descriptions; see the
+  [claim evidence](privacy-and-refusals.md#model-level-uncensored-evidence).
 - Price ranges are USD per generated image across advertised generation settings,
   excluding extras; quality matrices take precedence over resolution-only prices.
   They are neither invoices nor account credit checks.
@@ -218,7 +222,7 @@ Venice’s SD3.5 Large deployment is positioned for painting and artistic interp
 The newer Seedream choice emphasizes lifelike materials and lettering. It offers a 1.5K intermediate tier and advertised alpha output; do not conflate generation with the separately named edit model. [Venice model page](https://docs.venice.ai/models/seedream-v5-5)
 
 - Advertised prompt limit: **10,000 characters**; sizing: **ratio + 1K, 1.5K, 2K**; generation estimate: **$0.0255–$0.051**.
-- **Anonymous (upstream retention unknown)**; uncensored claim not established.
+- **Anonymous (upstream retention unknown)**; uncensored claim in the saved Venice catalog (`model_spec.uncensored: true`).
 - Prompting: [seedream](#seedream). Catalog distinctions: alpha advertised.
 
 ### Grok Imagine 2.0 — `grok-imagine-image-2-0`
@@ -242,7 +246,7 @@ Krea’s newer tier adds 4K and medium/high quality. Built-in prompt expansion i
 A fast open-weight Krea variant aimed at inexpensive iteration. It has explicit resolution tiers and a private route; the Turbo name does not establish identical output to Krea Large. [Venice model page](https://docs.venice.ai/models/krea-2-turbo)
 
 - Advertised prompt limit: **5,000 characters**; sizing: **ratio + 1K, 2K**; generation estimate: **$0.04–$0.06**.
-- **Private (Venice zero-retention claim)**; uncensored claim not established.
+- **Private (Venice zero-retention claim)**; uncensored claim in the saved Venice catalog (`model_spec.uncensored: true`).
 - Prompting: [krea](#krea).
 
 ### Flux 2 Pro — `flux-2-pro`
@@ -447,10 +451,10 @@ The friendly name is Seedream V4.5 although the API ID says v4. Venice specifica
 
 ### Seedream V5 Lite — `seedream-v5-lite`
 
-A faster Seedream 5.0 variant with a flat price and several ratios. Do not inherit V4.5’s uncensored claim or V5.5’s transparency capability merely from the family name. [Venice model page](https://docs.venice.ai/models/seedream-v5-lite)
+A faster Seedream 5.0 variant with a flat price and several ratios. Its own catalog entry carries an uncensored claim; do not inherit V5.5’s transparency capability merely from the family name. [Venice model page](https://docs.venice.ai/models/seedream-v5-lite)
 
 - Advertised prompt limit: **10,000 characters**; sizing: **ratio**; generation estimate: **$0.05**.
-- **Anonymous (upstream retention unknown)**; uncensored claim not established.
+- **Anonymous (upstream retention unknown)**; uncensored claim in the saved Venice catalog (`model_spec.uncensored: true`).
 - Prompting: [seedream](#seedream).
 
 ### Seedream V5 Pro — `seedream-v5-pro`
@@ -458,7 +462,7 @@ A faster Seedream 5.0 variant with a flat price and several ratios. Do not inher
 Seedream 5.0’s higher-end tier exposes 1K/2K and optimization/thinking. It is distinct from the newer V5.5 route; optional optimization stays off unless deliberately selected. [Venice model page](https://docs.venice.ai/models/seedream-v5-pro)
 
 - Advertised prompt limit: **10,000 characters**; sizing: **ratio + 1K, 2K**; generation estimate: **$0.06–$0.11**.
-- **Anonymous (upstream retention unknown)**; uncensored claim not established.
+- **Anonymous (upstream retention unknown)**; uncensored claim in the saved Venice catalog (`model_spec.uncensored: true`).
 - Prompting: [seedream](#seedream). Catalog distinctions: optimization/thinking advertised.
 
 ### Qwen Image 2 — `qwen-image-2`
@@ -562,7 +566,7 @@ A community FLUX.1-derived photographic model that Venice explicitly calls uncen
 The newer standard Qwen generation tier emphasizes text at low cost, with 1K and 2K equally priced here. Optimization/thinking is supported but is a deliberate option, not an invisible default. [Venice model page](https://docs.venice.ai/models/qwen-image-3)
 
 - Advertised prompt limit: **10,000 characters**; sizing: **ratio + 1K, 2K**; generation estimate: **$0.04**.
-- **Anonymous (upstream retention unknown)**; uncensored claim not established.
+- **Anonymous (upstream retention unknown)**; uncensored claim in the saved Venice catalog (`model_spec.uncensored: true`).
 - Prompting: [qwen and wan](#qwen-and-wan). Catalog distinctions: optimization/thinking advertised.
 
 ### Qwen Image 3 Pro — `qwen-image-3-pro`
@@ -570,7 +574,7 @@ The newer standard Qwen generation tier emphasizes text at low cost, with 1K and
 The newer Pro tier emphasizes detailed prompt adherence and text. Its 2K tier costs more than 1K, unlike standard Qwen Image 3; set expectations from the selected matrix. [Venice model page](https://docs.venice.ai/models/qwen-image-3-pro)
 
 - Advertised prompt limit: **10,000 characters**; sizing: **ratio + 1K, 2K**; generation estimate: **$0.05–$0.09**.
-- **Anonymous (upstream retention unknown)**; uncensored claim not established.
+- **Anonymous (upstream retention unknown)**; uncensored claim in the saved Venice catalog (`model_spec.uncensored: true`).
 - Prompting: [qwen and wan](#qwen-and-wan). Catalog distinctions: optimization/thinking advertised.
 
 ### Qwen Image 2.1 Turbo — `qwen-image-2-1-turbo`
@@ -578,7 +582,7 @@ The newer Pro tier emphasizes detailed prompt adherence and text. Its 2K tier co
 The fast Qwen 2.1 tier emphasizes efficient iteration at a low equal price for 1K/2K. Its upstream family does not support a separate negative prompt, despite generic Venice schema fields. [Venice model page](https://docs.venice.ai/models/qwen-image-2-1-turbo)
 
 - Advertised prompt limit: **10,000 characters**; sizing: **ratio + 1K, 2K**; generation estimate: **$0.02**.
-- **Anonymous (upstream retention unknown)**; uncensored claim not established.
+- **Anonymous (upstream retention unknown)**; uncensored claim in the saved Venice catalog (`model_spec.uncensored: true`).
 - Prompting: [qwen and wan](#qwen-and-wan). Catalog distinctions: optimization/thinking advertised.
 
 ### Qwen Image 2.1 Pro — `qwen-image-2-1-pro`
@@ -586,7 +590,7 @@ The fast Qwen 2.1 tier emphasizes efficient iteration at a low equal price for 1
 The fuller-capacity Qwen 2.1 route trades price for capability relative to Turbo. Its generation controls are separate from the reference limits advertised for the edit sibling. [Venice model page](https://docs.venice.ai/models/qwen-image-2-1-pro)
 
 - Advertised prompt limit: **10,000 characters**; sizing: **ratio + 1K, 2K**; generation estimate: **$0.05**.
-- **Anonymous (upstream retention unknown)**; uncensored claim not established.
+- **Anonymous (upstream retention unknown)**; uncensored claim in the saved Venice catalog (`model_spec.uncensored: true`).
 - Prompting: [qwen and wan](#qwen-and-wan). Catalog distinctions: optimization/thinking advertised.
 
 ## Snapshot provenance and limits

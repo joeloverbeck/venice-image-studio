@@ -171,6 +171,14 @@ and at most 20; generic negative prompts cap at 7,500; style names come from
 `/image/styles`; `lora_strength` adjusts existing model support, not arbitrary
 uploads; watermark hiding may be ignored. Support must be assessed per model.
 
+Design-interview reconciliation, 2026-11-14: every entry in the saved catalog
+extract includes `widthHeightDivisor`, including ratio/tier models. Its presence
+alone cannot select a sizing mode; use the model's documented sizing contract.
+The native endpoint documents `disable_prompt_optimization_thinking: true` to
+disable supported optional optimization. Its generic example uses false, which
+must not be copied as this application's default-off behavior. This is distinct
+from `enhance_prompt: false` and cannot disable undisclosed internal rewriting.
+
 Source capture also included the [OpenAPI schema](https://docs.venice.ai/swagger.yaml)
 (SHA-256 `c100cced1ce996fe1f7844bb5e27115ff89cc02c74132a045c8e00c0347d4a59`)
 and the [documentation index](https://docs.venice.ai/llms.txt). Public docs were
