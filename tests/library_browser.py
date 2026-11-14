@@ -24,6 +24,8 @@ class LibraryBrowser(unittest.TestCase):
         seam.Provider.response = {'images': [base64.b64encode(original).decode()], 'seed': 42,
                                   'private_detail': 'PRIVATE DIAGNOSTIC MARKER'}
         d = self.draft('Amber original <script>window.unsafe=true</script> 🦊')
+        d['settings'] = {'format': 'webp'}
+        self.call('/api/draft', d, 'PUT')
         attempt = self.finish(self.call('/api/generate', {'draft_id': d['id']})['id'])
         history = (self.library / (attempt['id'] + '.recipe.json')).read_bytes()
         self.draft('Unfinished draft stays here')

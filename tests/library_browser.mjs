@@ -23,11 +23,16 @@ try {
   assert.equal(await page.locator('#prompt').inputValue(), 'Draft kept through navigation 🦊');
   assert.equal(await page.locator('#setting-width').inputValue(), '768');
   assert.equal(await page.locator('#safe').isChecked(), true);
+  assert.match(await page.locator('#requested').innerText(), /webp/);
   await page.getByRole('button', {name: 'Inspect original', exact: true}).click();
   await page.locator('#original-inspector[open]').waitFor();
+  assert.match(await page.locator('#inspector-metadata').innerText(), /2048 × 1024 actual pixels · image\/png/);
   await page.getByRole('button', {name: '100%', exact: true}).click();
   await page.waitForFunction(() => document.querySelector('#inspector-image').getBoundingClientRect().width === 2048);
   const before = await page.locator('#inspector-image').getAttribute('style');
+  await page.locator('#inspector-viewport').focus();
+  await page.keyboard.press('ArrowRight');
+  assert.notEqual(await page.locator('#inspector-image').getAttribute('style'), before);
   const viewport = await page.locator('#inspector-viewport').boundingBox();
   await page.mouse.move(viewport.x + viewport.width / 2, viewport.y + viewport.height / 2);
   await page.mouse.down(); await page.mouse.move(viewport.x + viewport.width / 2 + 120, viewport.y + viewport.height / 2 + 50); await page.mouse.up();
@@ -50,6 +55,8 @@ try {
   const recipe = JSON.parse(await readFile(await (await recipeEvent).path(), 'utf8'));
   assert.equal(recipe.prompt, 'Amber original <script>window.unsafe=true</script> 🦊');
   assert.equal(recipe.provider, undefined);
+  assert.equal(recipe.request.format, 'webp');
+  assert.equal(recipe.results[0].mime, 'image/png');
   assert.equal(JSON.stringify(recipe).includes('PRIVATE DIAGNOSTIC MARKER'), false);
   await page.reload();
   await page.waitForFunction(() => document.querySelector('#prompt').value === 'Draft kept through navigation 🦊');

@@ -44,6 +44,7 @@ class SavedWork(unittest.TestCase):
     def test_recipe_export_is_explicit_and_separate_from_diagnostics(self):
         Provider.response = {'images': [base64.b64encode(PNG).decode()], 'seed': 42,
                              'provider_internal_notes': 'PRIVATE DIAGNOSTIC MARKER',
+                             'billing': {'message': 'PRIVATE DIAGNOSTIC MARKER'},
                              'api_key': 'offline-test'}
         d = self.draft('Exact authored export prompt <script>bad()</script> 🦊\n')
         a = self.finish(self.call('/api/generate', {'draft_id': d['id']})['id'])
