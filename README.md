@@ -3,12 +3,15 @@
 A local image studio for Venice AI: Rust application logic, a thin
 TypeScript browser interface, and a permanent image library outside the checkout.
 
-**Status: first Chroma application candidate; live-provider acceptance remains unmet.**
-The running Writing desk can generate, preserve originals and recipes, and reopen
-and reuse them after restart. Offline checks use synthetic responses. They do not
-establish Venice acceptance, image quality, seed effectiveness or owner usability.
-[Issue #2](https://github.com/joeloverbeck/venice-image-studio/issues/2) is the narrow
-first slice of the complete delivery in [#1](https://github.com/joeloverbeck/venice-image-studio/issues/1).
+**Status: all-model browsing and generation-controls candidate.**
+The Writing desk supports the current catalog, dated model guidance, validated
+model-specific controls, and saving/reopening original images and recipes.
+The first Chroma provider checkpoint is recorded in [issue #2](https://github.com/joeloverbeck/venice-image-studio/issues/2).
+[Issue #3](https://github.com/joeloverbeck/venice-image-studio/issues/3) owns the
+current model-choice increment; its Grok checkpoint and owner evaluation remain
+pending. Offline checks establish client behavior, not model quality, effective
+seeds, provider guarantees or owner usability. [Issue #1](https://github.com/joeloverbeck/venice-image-studio/issues/1)
+owns the complete delivery and acceptance boundary.
 
 The first usable version will support long prompts within each model's limits,
 informed model selection, appropriate sizing and seed controls, image inspection,
@@ -64,13 +67,35 @@ binary, then runs one process. Open **http://127.0.0.1:4318**. Subsequent launch
 can run `./target/debug/venice-image-studio` directly; rerun the script after code
 changes. `--port 4319` selects another loopback port. Use the printed IPv4 address.
 
-The first slice requests one PNG from Chroma at 1024×1024. Safe mode starts off;
-enhancement and embedded metadata are explicitly disabled. The current public
-catalog is refreshed at startup and through **Refresh catalog**; its cached date,
-price estimate and refresh errors stay visible. Seed is omitted, with the native
-random/default-zero discrepancy disclosed. An estimate is neither an actual
-charge nor a spending cap. Every Generate is an explicit spending action; there
-are no retries or fallback models. Catalog refresh itself is read-only.
+Browse and compare every current generation model by name, ID and dated practical
+guidance, with separate filters for uncensored positioning, Venice privacy,
+upstream retention and additional protection. Inspect source links, exact limits,
+sizing choices and the price table in each model detail. These are attributed
+claims and editorial suggestions, not a benchmark. Unknown and removed models
+remain visible; incomplete contracts prevent dispatch without substituting a model.
+
+Model changes retain the prompt and settings. Resolve visible incompatibilities
+or explicitly choose **Use this model’s documented defaults** before generating.
+Pixel routes validate bounds/divisors; ratio routes send only advertised ratios,
+tiers and qualities. Requested size and actual returned dimensions stay separate:
+the first Chroma checkpoint requested 1024×1024 and returned 1536×1536.
+
+One explicit Generate requests one image. Safe mode starts off and remembers later
+choices; enhancement and embedded metadata stay disabled. Advanced controls appear
+with documented support, uncertainty and sources. Seed omission has Venice’s
+random/default-zero discrepancy; an explicit seed never promises identical output.
+Web search and optional optimization begin off. The latter uses the provider’s
+negatively named disable field. Image-search surcharge information conflicts, so
+search-enabled dispatch remains unavailable with base price and unknown extra cost
+shown. No app setting promises to disable internal model rewriting.
+
+Catalog and styles refresh at startup and through **Refresh catalog**, with dated
+external caches and visible failures. Applicable quality/resolution matrices govern
+Rust preflight estimates; the displayed estimate is bound to the exact draft and
+catalog revision before dispatch. Estimates are neither actual charges nor spending
+caps. There are no automatic retries or fallback models. Catalog/style refreshes
+are read-only. Detailed source applicability is recorded in the
+[control evidence](docs/research/control-contract.md).
 
 The default library is `~/Pictures/Venice Image Studio`. To override it, set
 `VENICE_IMAGE_STUDIO_DATA_DIR` to an absolute external directory before launch.
@@ -93,10 +118,12 @@ preserve provider bytes, which may already contain provider metadata; the recipe
 and diagnostics remain separate in the app and external library.
 
 Local resource policy: request bodies 256 KiB, catalog 4 MiB, provider response
-128 MiB, each original 32 MiB, decoded dimensions at most 8192×8192 with a 256 MiB
+192 MiB, each original 96 MiB, decoded dimensions at most 8192×8192 with a 256 MiB
 decoder allocation limit, and generation timeout five minutes. Diagnostic captures
 are bounded and truncation is recorded. These are application safeguards, not
-provider output guarantees or proof of larger tier support.
+provider output guarantees. A synthetic 4096×4096 RGBA PNG over 64 MiB exercises
+original retention, download and restart; other maximum-size combinations remain
+bounded rather than universally verified.
 
 ## Check without credentials or paid calls
 
@@ -113,20 +140,20 @@ The high-seam checks start the actual Rust server with a controlled loopback HTT
 provider and a temporary external library under `/var/tmp`. They cover exact long
 Unicode prompts/settings, original/download/recipe identity, restart/reuse,
 duplicate dispatch protection, interrupted requests, a crash between original and recipe finalization, local
-save retry, missing/invalid credentials, storage/resource limits, stale
-catalogs, response flags, partial/corrupt images, redirects, secret redaction and
+save retry, missing/invalid credentials, storage/resource limits, all 48 researched base request paths, model-switch conflicts, stale
+catalogs/styles, documented controls, Unicode limits, price matrices, response flags, partial/corrupt images, redirects, secret redaction and
 Host/Origin/token/path boundaries. Fixtures are synthetic and not quality evidence.
 The `test-support` feature enables `--fixture-provider` for loopback only, ignores
 `.env` and process credentials, and sends a fixed synthetic credential. Ordinary
 builds reject that option. Rebuild with `cargo build --locked` before ordinary use.
 Browser checks of the same running path are recorded in the active issue.
 
-Runtime source basis for this first path: public catalog refreshed 2026-11-14,
+Runtime source basis: public catalog refreshed 2026-11-14,
 SHA-256 `faaf625846a2639e12ad5a9f1c251ea7993dea942adf3a8c29739c87d01c226e`, and
 [Venice native generation contract](https://docs.venice.ai/api-reference/endpoint/image/generate),
 OpenAPI SHA-256 `c100cced1ce996fe1f7844bb5e27115ff89cc02c74132a045c8e00c0347d4a59`.
 These matched the dated research. Runtime availability and prices are refreshed;
-no live generation or owner acceptance is implied by source agreement.
+source agreement does not itself establish live generation or owner acceptance.
 
 ## Mock-ups
 

@@ -1,0 +1,999 @@
+{
+  "derived_from": "docs/research/model-guide.md",
+  "source_sha256": "835e3aa937c022bf80a0c8cc248dc50146c6d3435a38dc98fd4a7eb8f0726d33",
+  "reviewed_at": "2026-11-14",
+  "models": {
+    "venice-sd35": {
+      "name": "Venice SD35",
+      "fit": "Venice’s SD3.5 Large deployment is positioned for painting and artistic interpretation. Its short input limit makes it unsuitable for an unchanged long brief. Venice model page",
+      "advice": "Stability's SD3.5 introduction\ndescribes diverse style capability; Venice specifically positions its deployment\ntoward painterly work. Use a clear medium, composition and subject within its\nshort limit. Chroma's model card\nestablishes the architecture/source, but this sweep did not verify a required\nVenice-specific syntax or that FLUX.2's negative-prompt rules transfer to Chroma.\n\nThe author pages linked by Venice for\nLustify and\nWAI could not be read\nthrough the research browser. Their Venice pages were read. Do not invent\ncheckpoint trigger words, weighted-tag syntax, samplers or mandatory quality\ntags. A concise photographic brief for Lustify and clear anime style/composition\nfor WAI are editorial starting points, pending exact-checkpoint evidence.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/venice-sd35"
+        },
+        {
+          "title": "SD3.5 introduction",
+          "url": "https://stability.ai/news-updates/introducing-stable-diffusion-3-5"
+        },
+        {
+          "title": "Chroma's model card",
+          "url": "https://huggingface.co/lodestones/Chroma1-HD"
+        },
+        {
+          "title": "Lustify",
+          "url": "https://civitai.com/models/573152/lustify-sdxl-nsfw-checkpoint"
+        },
+        {
+          "title": "WAI",
+          "url": "https://civitai.com/models/827184?modelVersionId=1761560"
+        }
+      ],
+      "dated_uncensored": null,
+      "dated_privacy": "private"
+    },
+    "seedream-v5-5": {
+      "name": "Seedream V5.5",
+      "fit": "The newer Seedream choice emphasizes lifelike materials and lettering. It offers a 1.5K intermediate tier and advertised alpha output; do not conflate generation with the separately named edit model. Venice model page",
+      "advice": "ByteDance's Seedream 5.5 page\ndemonstrates precise natural-language material, lettering and transparency\ninstructions. Its release account\nemphasizes realism and editing stability. Those demonstrations do not establish\nmandatory syntax or transfer editing guarantees to this generation-only app.\nFor V4.5 and V5 variants, use the general brief and their own Venice page; no\nversion-specific required syntax was established in this sweep.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/seedream-v5-5"
+        },
+        {
+          "title": "Seedream 5.5 page",
+          "url": "https://seed.bytedance.com/en/seedream5_5"
+        },
+        {
+          "title": "release account",
+          "url": "https://seed.bytedance.com/en/blog/more-realistic-images-more-stable-editing-across-100-rounds-introducing-seedream-5-5/"
+        }
+      ],
+      "dated_uncensored": true,
+      "dated_privacy": "anonymized"
+    },
+    "grok-imagine-image-2-0": {
+      "name": "Grok Imagine 2.0",
+      "fit": "Second-generation Grok adds selectable low/medium quality and more aspect choices than the older Grok route. It is one of the catalog’s private routes, without an established uncensored guarantee. Venice model page",
+      "advice": "xAI's image prompting guide\nfor Imagine 2.0 recommends a clear subject with count/material/framing, then\nart direction, lighting and color. Specify a coherent single image and important\ncrop/focus. Use this as family-level advice for older Grok, not verified parity.\nVenice's selected quality settings and privacy claim remain route-specific.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/grok-imagine-2-0"
+        },
+        {
+          "title": "image prompting guide",
+          "url": "https://docs.x.ai/developers/model-capabilities/images/prompting-guide"
+        }
+      ],
+      "dated_uncensored": null,
+      "dated_privacy": "private"
+    },
+    "krea-3": {
+      "name": "Krea 3",
+      "fit": "Krea’s newer tier adds 4K and medium/high quality. Built-in prompt expansion is a material tradeoff for an owner who dislikes added content; no disabling guarantee was found. Venice model page",
+      "advice": "The Krea 2 Turbo model card\nuses descriptive scene prose with specific perspective, light and texture.\nIt supports that style of starting prompt, not mandatory magic words. Exact\nprompt guides for Venice's other Krea tiers were not established. Venice\nexplicitly advertises built-in expansion for Krea 3; warn that short prompts\ncan acquire extra detail even with the optional Venice enhancer disabled.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/krea-3"
+        },
+        {
+          "title": "Krea 2 Turbo model card",
+          "url": "https://huggingface.co/krea/Krea-2-Turbo"
+        }
+      ],
+      "dated_uncensored": null,
+      "dated_privacy": "anonymized"
+    },
+    "krea-2-turbo": {
+      "name": "Krea 2 Turbo",
+      "fit": "A fast open-weight Krea variant aimed at inexpensive iteration. It has explicit resolution tiers and a private route; the Turbo name does not establish identical output to Krea Large. Venice model page",
+      "advice": "The Krea 2 Turbo model card\nuses descriptive scene prose with specific perspective, light and texture.\nIt supports that style of starting prompt, not mandatory magic words. Exact\nprompt guides for Venice's other Krea tiers were not established. Venice\nexplicitly advertises built-in expansion for Krea 3; warn that short prompts\ncan acquire extra detail even with the optional Venice enhancer disabled.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/krea-2-turbo"
+        },
+        {
+          "title": "Krea 2 Turbo model card",
+          "url": "https://huggingface.co/krea/Krea-2-Turbo"
+        }
+      ],
+      "dated_uncensored": true,
+      "dated_privacy": "private"
+    },
+    "flux-2-pro": {
+      "name": "Flux 2 Pro",
+      "fit": "A balance of detailed prompt following and speed in the FLUX.2 family. It costs less than Max but has the same advertised prompt capacity. Venice model page",
+      "advice": "Black Forest Labs' FLUX.2 guide\nrecommends a natural-language subject/action/style/context structure, with important\nelements first. It documents no negative-prompt support: describe wanted content\npositively. Its word-count examples are guidance, not Venice limits. Structured\nJSON is optional prose, not an app schema. This source applies to FLUX.2; do not\nautomatically transfer every control or syntax rule to FLUX.3.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/flux-2-pro"
+        },
+        {
+          "title": "FLUX.2 guide",
+          "url": "https://docs.bfl.ai/guides/prompting_guide_flux2"
+        }
+      ],
+      "dated_uncensored": null,
+      "dated_privacy": "anonymized"
+    },
+    "flux-2-max": {
+      "name": "Flux 2 Max",
+      "fit": "FLUX.2’s premium tier targets realism and precision. It costs three times Pro in this snapshot; whether its detail improvement matters needs the owner’s actual prompt. Venice model page",
+      "advice": "Black Forest Labs' FLUX.2 guide\nrecommends a natural-language subject/action/style/context structure, with important\nelements first. It documents no negative-prompt support: describe wanted content\npositively. Its word-count examples are guidance, not Venice limits. Structured\nJSON is optional prose, not an app schema. This source applies to FLUX.2; do not\nautomatically transfer every control or syntax rule to FLUX.3.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/flux-2-max"
+        },
+        {
+          "title": "FLUX.2 guide",
+          "url": "https://docs.bfl.ai/guides/prompting_guide_flux2"
+        }
+      ],
+      "dated_uncensored": null,
+      "dated_privacy": "anonymized"
+    },
+    "flux-3-image": {
+      "name": "Flux 3",
+      "fit": "The newer flagship emphasizes text, layout and high-resolution output with much more prompt room than FLUX.2. Its 4K price is substantial; FLUX.2 prompting/control rules are not automatically exact-version evidence. Venice model page",
+      "advice": "Black Forest Labs' FLUX.2 guide\nrecommends a natural-language subject/action/style/context structure, with important\nelements first. It documents no negative-prompt support: describe wanted content\npositively. Its word-count examples are guidance, not Venice limits. Structured\nJSON is optional prose, not an app schema. This source applies to FLUX.2; do not\nautomatically transfer every control or syntax rule to FLUX.3.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/flux-3-image"
+        },
+        {
+          "title": "FLUX.2 guide",
+          "url": "https://docs.bfl.ai/guides/prompting_guide_flux2"
+        }
+      ],
+      "dated_uncensored": null,
+      "dated_privacy": "anonymized"
+    },
+    "gpt-image-2-5-flare": {
+      "name": "GPT Image 2.5 Flare",
+      "fit": "The speed-oriented 2.5 choice for iterative creation. It shares Venice’s price matrix with 2.5 Sunburst here, so cost alone does not explain their quality/latency distinction. Venice model page",
+      "advice": "OpenAI's image prompting guide\ncovers the 2.6 and 2.5 Flare/Sunburst distinction: speed-oriented versus more\ndemanding detail/layout. Use an explicit intended output, subject, composition,\nstyle and constraints; labeled sections can help complex briefs. Quote exact\nlettering and state repetitions/placement. The guide also points older models\nto shared techniques, with model-specific testing still needed. Venice does not\nexpose every upstream parameter, so do not add upstream complexity, quality\nlevels or sizing rules absent from its own contract.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/gpt-image-2-5-flare"
+        },
+        {
+          "title": "image prompting guide",
+          "url": "https://developers.openai.com/api/docs/guides/image-prompting"
+        }
+      ],
+      "dated_uncensored": null,
+      "dated_privacy": "anonymized"
+    },
+    "gpt-image-2-5-sunburst": {
+      "name": "GPT Image 2.5 Sunburst",
+      "fit": "The demanding-detail 2.5 choice, aimed at product and campaign work. Compare against 2.6 on actual useful detail before treating a version increase as a universal improvement. Venice model page",
+      "advice": "OpenAI's image prompting guide\ncovers the 2.6 and 2.5 Flare/Sunburst distinction: speed-oriented versus more\ndemanding detail/layout. Use an explicit intended output, subject, composition,\nstyle and constraints; labeled sections can help complex briefs. Quote exact\nlettering and state repetitions/placement. The guide also points older models\nto shared techniques, with model-specific testing still needed. Venice does not\nexpose every upstream parameter, so do not add upstream complexity, quality\nlevels or sizing rules absent from its own contract.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/gpt-image-2-5-sunburst"
+        },
+        {
+          "title": "image prompting guide",
+          "url": "https://developers.openai.com/api/docs/guides/image-prompting"
+        }
+      ],
+      "dated_uncensored": null,
+      "dated_privacy": "anonymized"
+    },
+    "gpt-image-2-6-sunburst": {
+      "name": "GPT Image 2.6 Sunburst",
+      "fit": "The newer fidelity-oriented choice for complex layouts, product images and detailed final work. This is a strong candidate to inspect for the owner’s quality preference, not a measured winner. Venice model page",
+      "advice": "OpenAI's image prompting guide\ncovers the 2.6 and 2.5 Flare/Sunburst distinction: speed-oriented versus more\ndemanding detail/layout. Use an explicit intended output, subject, composition,\nstyle and constraints; labeled sections can help complex briefs. Quote exact\nlettering and state repetitions/placement. The guide also points older models\nto shared techniques, with model-specific testing still needed. Venice does not\nexpose every upstream parameter, so do not add upstream complexity, quality\nlevels or sizing rules absent from its own contract.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/gpt-image-2-6-sunburst"
+        },
+        {
+          "title": "image prompting guide",
+          "url": "https://developers.openai.com/api/docs/guides/image-prompting"
+        }
+      ],
+      "dated_uncensored": null,
+      "dated_privacy": "anonymized"
+    },
+    "gpt-image-2-6-flare": {
+      "name": "GPT Image 2.6 Flare",
+      "fit": "The newer faster tier aims to retain useful detail with less latency than Sunburst. Venice currently lists the same prices as 2.6 Sunburst; measure usefulness and waiting time separately. Venice model page",
+      "advice": "OpenAI's image prompting guide\ncovers the 2.6 and 2.5 Flare/Sunburst distinction: speed-oriented versus more\ndemanding detail/layout. Use an explicit intended output, subject, composition,\nstyle and constraints; labeled sections can help complex briefs. Quote exact\nlettering and state repetitions/placement. The guide also points older models\nto shared techniques, with model-specific testing still needed. Venice does not\nexpose every upstream parameter, so do not add upstream complexity, quality\nlevels or sizing rules absent from its own contract.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/gpt-image-2-6-flare"
+        },
+        {
+          "title": "image prompting guide",
+          "url": "https://developers.openai.com/api/docs/guides/image-prompting"
+        }
+      ],
+      "dated_uncensored": null,
+      "dated_privacy": "anonymized"
+    },
+    "gpt-image-2": {
+      "name": "GPT Image 2",
+      "fit": "Earlier GPT generation with typography and fine-detail positioning. Its high-quality tiers are much more expensive than low quality; resolution-only and quality-matrix prices differ slightly. Use the applicable matrix. Venice model page",
+      "advice": "OpenAI's image prompting guide\ncovers the 2.6 and 2.5 Flare/Sunburst distinction: speed-oriented versus more\ndemanding detail/layout. Use an explicit intended output, subject, composition,\nstyle and constraints; labeled sections can help complex briefs. Quote exact\nlettering and state repetitions/placement. The guide also points older models\nto shared techniques, with model-specific testing still needed. Venice does not\nexpose every upstream parameter, so do not add upstream complexity, quality\nlevels or sizing rules absent from its own contract.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/gpt-image-2"
+        },
+        {
+          "title": "image prompting guide",
+          "url": "https://developers.openai.com/api/docs/guides/image-prompting"
+        }
+      ],
+      "dated_uncensored": null,
+      "dated_privacy": "anonymized"
+    },
+    "gpt-image-1-5": {
+      "name": "GPT Image 1.5",
+      "fit": "An older GPT choice with only three advertised ratios, less prompt room and a flat price. Alpha output is advertised, but newer tier controls must not be assumed here. Venice model page",
+      "advice": "OpenAI's image prompting guide\ncovers the 2.6 and 2.5 Flare/Sunburst distinction: speed-oriented versus more\ndemanding detail/layout. Use an explicit intended output, subject, composition,\nstyle and constraints; labeled sections can help complex briefs. Quote exact\nlettering and state repetitions/placement. The guide also points older models\nto shared techniques, with model-specific testing still needed. Venice does not\nexpose every upstream parameter, so do not add upstream complexity, quality\nlevels or sizing rules absent from its own contract.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/gpt-image-1-5"
+        },
+        {
+          "title": "image prompting guide",
+          "url": "https://developers.openai.com/api/docs/guides/image-prompting"
+        }
+      ],
+      "dated_uncensored": null,
+      "dated_privacy": "anonymized"
+    },
+    "hunyuan-image-v3": {
+      "name": "Hunyuan Image 3.0",
+      "fit": "Tencent’s reasoning-oriented Instruct deployment is suited to explicit, instruction-heavy composition. Internal self-rewriting is a possible fidelity tradeoff even when Venice enhancement is disabled. Venice model page",
+      "advice": "Tencent's Instruct model card\nand prompt notes\ndistinguish the Instruct checkpoint's reasoning/self-rewrite from the base\ncheckpoint. Venice serves Instruct. Write explicit instructions; do not promise\nthat disabling Venice's enhancer removes internal reasoning or rewriting.\nNo exposed Venice switch establishing that guarantee was found.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/hunyuan-image-3-0"
+        },
+        {
+          "title": "Instruct model card",
+          "url": "https://huggingface.co/tencent/HunyuanImage-3.0-Instruct"
+        },
+        {
+          "title": "prompt notes",
+          "url": "https://huggingface.co/tencent/HunyuanImage-3.0-Instruct/blob/main/Hunyuan-Image3.md"
+        }
+      ],
+      "dated_uncensored": null,
+      "dated_privacy": "private"
+    },
+    "ideogram-v4": {
+      "name": "Ideogram V4",
+      "fit": "A typography-oriented option for posters, logos and promotional graphics. It has a simple flat price, without V4.5’s exposed quality/resolution choices. Venice model page",
+      "advice": "Ideogram's creation documentation\nsupports plain-language descriptions with quoted desired lettering. For a poster,\nidentify hierarchy, text placement, style and colors. These are family techniques;\nthe Venice V4/V4.5 pages establish version-specific controls but not a mandatory\nnew prompt language. Do not assume a website's “magic prompt” feature is required.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/ideogram-v4"
+        },
+        {
+          "title": "creation documentation",
+          "url": "https://docs.ideogram.ai/create/create"
+        }
+      ],
+      "dated_uncensored": null,
+      "dated_privacy": "anonymized"
+    },
+    "ideogram-v4-5": {
+      "name": "Ideogram V4.5",
+      "fit": "A newer typography option with selectable quality and 1K/2K tiers. The quality choice changes price strongly, while the captured matrix charges the same at either resolution. Venice model page",
+      "advice": "Ideogram's creation documentation\nsupports plain-language descriptions with quoted desired lettering. For a poster,\nidentify hierarchy, text placement, style and colors. These are family techniques;\nthe Venice V4/V4.5 pages establish version-specific controls but not a mandatory\nnew prompt language. Do not assume a website's “magic prompt” feature is required.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/ideogram-v4-5"
+        },
+        {
+          "title": "creation documentation",
+          "url": "https://docs.ideogram.ai/create/create"
+        }
+      ],
+      "dated_uncensored": null,
+      "dated_privacy": "anonymized"
+    },
+    "krea-v2-large": {
+      "name": "Krea v2 Large",
+      "fit": "Krea’s refined-detail/aesthetic tier, positioned above Medium. It advertises three style references with strength control, a capability for later scope rather than a required first-release upload flow. Venice model page",
+      "advice": "The Krea 2 Turbo model card\nuses descriptive scene prose with specific perspective, light and texture.\nIt supports that style of starting prompt, not mandatory magic words. Exact\nprompt guides for Venice's other Krea tiers were not established. Venice\nexplicitly advertises built-in expansion for Krea 3; warn that short prompts\ncan acquire extra detail even with the optional Venice enhancer disabled.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/krea-v2-large"
+        },
+        {
+          "title": "Krea 2 Turbo model card",
+          "url": "https://huggingface.co/krea/Krea-2-Turbo"
+        }
+      ],
+      "dated_uncensored": null,
+      "dated_privacy": "anonymized"
+    },
+    "krea-v2-medium": {
+      "name": "Krea v2 Medium",
+      "fit": "The less expensive Krea v2 alternative balancing speed and appearance. It has the same prompt cap and reference capabilities as Large; the catalog does not quantify their quality difference. Venice model page",
+      "advice": "The Krea 2 Turbo model card\nuses descriptive scene prose with specific perspective, light and texture.\nIt supports that style of starting prompt, not mandatory magic words. Exact\nprompt guides for Venice's other Krea tiers were not established. Venice\nexplicitly advertises built-in expansion for Krea 3; warn that short prompts\ncan acquire extra detail even with the optional Venice enhancer disabled.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/krea-v2-medium"
+        },
+        {
+          "title": "Krea 2 Turbo model card",
+          "url": "https://huggingface.co/krea/Krea-2-Turbo"
+        }
+      ],
+      "dated_uncensored": null,
+      "dated_privacy": "anonymized"
+    },
+    "luma-uni-1": {
+      "name": "Luma Uni-1",
+      "fit": "A general high-fidelity option positioned around informed interpretation of the brief. Its web-grounding description does not expose a search switch. Three style references are advertised, without strength control. Venice model page",
+      "advice": "Luma's Uni-1 prompt guide\nrecommends a natural creative brief, spatial specificity and exact quoted text;\nnegative prompts are not supported upstream. Venice's Uni-1 descriptions mention\nweb-grounded knowledge, but supportsWebSearch is false: that does not create a\nuser-controlled search toggle. Reference-count differences between upstream and\nVenice are another reason to use Venice's contract.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/luma-uni-1"
+        },
+        {
+          "title": "Uni-1 prompt guide",
+          "url": "https://docs.agents.lumalabs.ai/guides/images/prompt-guide/"
+        }
+      ],
+      "dated_uncensored": null,
+      "dated_privacy": "anonymized"
+    },
+    "luma-uni-1-max": {
+      "name": "Luma Uni-1 Max",
+      "fit": "Uni-1’s higher-fidelity tier costs more than twice standard in this snapshot. The prompt and reference limits remain the same; inspect whether the premium changes useful details. Venice model page",
+      "advice": "Luma's Uni-1 prompt guide\nrecommends a natural creative brief, spatial specificity and exact quoted text;\nnegative prompts are not supported upstream. Venice's Uni-1 descriptions mention\nweb-grounded knowledge, but supportsWebSearch is false: that does not create a\nuser-controlled search toggle. Reference-count differences between upstream and\nVenice are another reason to use Venice's contract.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/luma-uni-1-max"
+        },
+        {
+          "title": "Uni-1 prompt guide",
+          "url": "https://docs.agents.lumalabs.ai/guides/images/prompt-guide/"
+        }
+      ],
+      "dated_uncensored": null,
+      "dated_privacy": "anonymized"
+    },
+    "minimax-h3-image": {
+      "name": "MiniMax H3 Image",
+      "fit": "A general option with broad landscape/portrait ratios and 4K availability. 1K and 2K share the listed price. Optional optimization/thinking is advertised, but no special prompt grammar was established. Venice model page",
+      "advice": "Meta's Muse release\nsupports its instruction-following/text-rendering positioning. Use a clear creative\nbrief; do not assume upstream agentic tools are exposed by Venice. This sweep\ndid not establish a distinct required prompt format for Muse or MiniMax H3.\nMiniMax's Venice page remains the source for the H3 entry and controls; general\nMiniMax API documentation is not enough to claim exact H3 prompting guarantees.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/minimax-h3-image"
+        },
+        {
+          "title": "Muse release",
+          "url": "https://ai.meta.com/blog/introducing-muse-image-muse-video-msl"
+        }
+      ],
+      "dated_uncensored": null,
+      "dated_privacy": "anonymized"
+    },
+    "muse-image": {
+      "name": "Muse Image",
+      "fit": "Meta’s model emphasizes instruction fidelity, typography and small details at a low listed flat price. Upstream claims about tool-assisted creation do not mean the Venice route exposes those tools. Venice model page",
+      "advice": "Meta's Muse release\nsupports its instruction-following/text-rendering positioning. Use a clear creative\nbrief; do not assume upstream agentic tools are exposed by Venice. This sweep\ndid not establish a distinct required prompt format for Muse or MiniMax H3.\nMiniMax's Venice page remains the source for the H3 entry and controls; general\nMiniMax API documentation is not enough to claim exact H3 prompting guarantees.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/muse-image"
+        },
+        {
+          "title": "Muse release",
+          "url": "https://ai.meta.com/blog/introducing-muse-image-muse-video-msl"
+        }
+      ],
+      "dated_uncensored": null,
+      "dated_privacy": "anonymized"
+    },
+    "nano-banana-2": {
+      "name": "Nano Banana 2",
+      "fit": "A general Gemini-based option with extensive prompt capacity and extreme ratios. It is a plausible long-brief candidate, subject to the unresolved 7,500-character schema conflict. Venice model page",
+      "advice": "Google's image-generation guide\nsupports detailed natural-language briefs with context and explicit composition.\nPro is positioned for complex fidelity-sensitive work; 2/2.1 balance capability\nand efficiency; Lite favors speed. Use clear text and spatial requirements, not\na claim that more tokens always help. Upstream conversational editing/grounding\nfeatures do not imply equivalent Venice support. Only the three non-Lite entries\ncurrently advertise Venice's web-search capability.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/nano-banana-2"
+        },
+        {
+          "title": "image-generation guide",
+          "url": "https://ai.google.dev/gemini-api/docs/image-generation"
+        }
+      ],
+      "dated_uncensored": null,
+      "dated_privacy": "anonymized"
+    },
+    "nano-banana-2-1": {
+      "name": "Nano Banana 2.1",
+      "fit": "An updated Nano Banana 2 route with the same captured limit, tier prices and ratios. Newer version alone does not prove better results; use the same original brief for an explicit comparison. Venice model page",
+      "advice": "Google's image-generation guide\nsupports detailed natural-language briefs with context and explicit composition.\nPro is positioned for complex fidelity-sensitive work; 2/2.1 balance capability\nand efficiency; Lite favors speed. Use clear text and spatial requirements, not\na claim that more tokens always help. Upstream conversational editing/grounding\nfeatures do not imply equivalent Venice support. Only the three non-Lite entries\ncurrently advertise Venice's web-search capability.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/nano-banana-2-1"
+        },
+        {
+          "title": "image-generation guide",
+          "url": "https://ai.google.dev/gemini-api/docs/image-generation"
+        }
+      ],
+      "dated_uncensored": null,
+      "dated_privacy": "anonymized"
+    },
+    "nano-banana-pro": {
+      "name": "Nano Banana Pro",
+      "fit": "The higher-priced Nano Banana tier is positioned for demanding fidelity and complex briefs. It retains the family’s large prompt allowance and extreme ratios; none is a measured success guarantee. Venice model page",
+      "advice": "Google's image-generation guide\nsupports detailed natural-language briefs with context and explicit composition.\nPro is positioned for complex fidelity-sensitive work; 2/2.1 balance capability\nand efficiency; Lite favors speed. Use clear text and spatial requirements, not\na claim that more tokens always help. Upstream conversational editing/grounding\nfeatures do not imply equivalent Venice support. Only the three non-Lite entries\ncurrently advertise Venice's web-search capability.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/nano-banana-pro"
+        },
+        {
+          "title": "image-generation guide",
+          "url": "https://ai.google.dev/gemini-api/docs/image-generation"
+        }
+      ],
+      "dated_uncensored": null,
+      "dated_privacy": "anonymized"
+    },
+    "nano-banana-2-lite": {
+      "name": "Nano Banana 2 Lite",
+      "fit": "The efficiency-focused option has a smaller prompt allowance, no exposed resolution tier and no web-search capability flag. Do not copy the Pro/2/2.1 settings wholesale. Venice model page",
+      "advice": "Google's image-generation guide\nsupports detailed natural-language briefs with context and explicit composition.\nPro is positioned for complex fidelity-sensitive work; 2/2.1 balance capability\nand efficiency; Lite favors speed. Use clear text and spatial requirements, not\na claim that more tokens always help. Upstream conversational editing/grounding\nfeatures do not imply equivalent Venice support. Only the three non-Lite entries\ncurrently advertise Venice's web-search capability.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/nano-banana-2-lite"
+        },
+        {
+          "title": "image-generation guide",
+          "url": "https://ai.google.dev/gemini-api/docs/image-generation"
+        }
+      ],
+      "dated_uncensored": null,
+      "dated_privacy": "anonymized"
+    },
+    "recraft-v4": {
+      "name": "Recraft V4",
+      "fit": "A design-oriented choice for branding, graphics and text. The native Venice response is raster; a vector-like composition request will not make this endpoint return SVG. Venice model page",
+      "advice": "Recraft's prompting guide\nrecommends starting from scene and composition, then important details and light.\nShorter briefs support exploration; structured detail gives design control.\nSpecify the intended design use and visual constraints. Recraft's own vector\nproducts are separate: Venice's generation endpoint documents raster output,\nso this app must not advertise SVG generation from the Recraft model name alone.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/recraft-v4"
+        },
+        {
+          "title": "prompting guide",
+          "url": "https://www.recraft.ai/blog/prompt-engineering-guide"
+        }
+      ],
+      "dated_uncensored": null,
+      "dated_privacy": "anonymized"
+    },
+    "recraft-v4-pro": {
+      "name": "Recraft V4 Pro",
+      "fit": "The premium Recraft option emphasizes finer product/design detail at a much higher price. The same prompt and ratio options do not establish that the premium is needed for every graphic. Venice model page",
+      "advice": "Recraft's prompting guide\nrecommends starting from scene and composition, then important details and light.\nShorter briefs support exploration; structured detail gives design control.\nSpecify the intended design use and visual constraints. Recraft's own vector\nproducts are separate: Venice's generation endpoint documents raster output,\nso this app must not advertise SVG generation from the Recraft model name alone.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/recraft-v4-pro"
+        },
+        {
+          "title": "prompting guide",
+          "url": "https://www.recraft.ai/blog/prompt-engineering-guide"
+        }
+      ],
+      "dated_uncensored": null,
+      "dated_privacy": "anonymized"
+    },
+    "seedream-v4": {
+      "name": "Seedream V4.5",
+      "fit": "The friendly name is Seedream V4.5 although the API ID says v4. Venice specifically calls this deployment uncensored. That claim coexists with anonymous privacy, so upstream retention remains unestablished. Venice model page",
+      "advice": "ByteDance's Seedream 5.5 page\ndemonstrates precise natural-language material, lettering and transparency\ninstructions. Its release account\nemphasizes realism and editing stability. Those demonstrations do not establish\nmandatory syntax or transfer editing guarantees to this generation-only app.\nFor V4.5 and V5 variants, use the general brief and their own Venice page; no\nversion-specific required syntax was established in this sweep.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/seedream-v4-5"
+        },
+        {
+          "title": "Seedream 5.5 page",
+          "url": "https://seed.bytedance.com/en/seedream5_5"
+        },
+        {
+          "title": "release account",
+          "url": "https://seed.bytedance.com/en/blog/more-realistic-images-more-stable-editing-across-100-rounds-introducing-seedream-5-5/"
+        }
+      ],
+      "dated_uncensored": true,
+      "dated_privacy": "anonymized"
+    },
+    "seedream-v5-lite": {
+      "name": "Seedream V5 Lite",
+      "fit": "A faster Seedream 5.0 variant with a flat price and several ratios. Its own catalog entry carries an uncensored claim; do not inherit V5.5’s transparency capability merely from the family name. Venice model page",
+      "advice": "ByteDance's Seedream 5.5 page\ndemonstrates precise natural-language material, lettering and transparency\ninstructions. Its release account\nemphasizes realism and editing stability. Those demonstrations do not establish\nmandatory syntax or transfer editing guarantees to this generation-only app.\nFor V4.5 and V5 variants, use the general brief and their own Venice page; no\nversion-specific required syntax was established in this sweep.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/seedream-v5-lite"
+        },
+        {
+          "title": "Seedream 5.5 page",
+          "url": "https://seed.bytedance.com/en/seedream5_5"
+        },
+        {
+          "title": "release account",
+          "url": "https://seed.bytedance.com/en/blog/more-realistic-images-more-stable-editing-across-100-rounds-introducing-seedream-5-5/"
+        }
+      ],
+      "dated_uncensored": true,
+      "dated_privacy": "anonymized"
+    },
+    "seedream-v5-pro": {
+      "name": "Seedream V5 Pro",
+      "fit": "Seedream 5.0’s higher-end tier exposes 1K/2K and optimization/thinking. It is distinct from the newer V5.5 route; optional optimization stays off unless deliberately selected. Venice model page",
+      "advice": "ByteDance's Seedream 5.5 page\ndemonstrates precise natural-language material, lettering and transparency\ninstructions. Its release account\nemphasizes realism and editing stability. Those demonstrations do not establish\nmandatory syntax or transfer editing guarantees to this generation-only app.\nFor V4.5 and V5 variants, use the general brief and their own Venice page; no\nversion-specific required syntax was established in this sweep.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/seedream-v5-pro"
+        },
+        {
+          "title": "Seedream 5.5 page",
+          "url": "https://seed.bytedance.com/en/seedream5_5"
+        },
+        {
+          "title": "release account",
+          "url": "https://seed.bytedance.com/en/blog/more-realistic-images-more-stable-editing-across-100-rounds-introducing-seedream-5-5/"
+        }
+      ],
+      "dated_uncensored": true,
+      "dated_privacy": "anonymized"
+    },
+    "qwen-image-2": {
+      "name": "Qwen Image 2",
+      "fit": "The Qwen 2.0 standard tier emphasizes native 2K and lettering. Venice controls it through aspect ratios; its upstream API’s custom-size rules do not authorize width/height here. Venice model page",
+      "advice": "Alibaba's text-to-image guide\nrecommends subject, scene, style, lighting and composition. Wan 2.7 and Qwen 2.1\ndo not support its separate negative-prompt parameter. Newer Qwen routes can\ninclude upstream prompt rewriting; Venice's optional enhancer being off does\nnot prove every upstream rewrite is disabled. Do not silently import upstream\ndefaults, 4K modes, thinking or rewritten prompts into Venice requests.\n\nThe original Qwen Image model card\nemphasizes text rendering, especially Chinese. Exact desired text and layout\nare sensible starting points across this family, but original-model behavior\ndoes not prove later version parity.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/qwen-image-2"
+        },
+        {
+          "title": "text-to-image guide",
+          "url": "https://www.alibabacloud.com/help/en/model-studio/text-to-image"
+        },
+        {
+          "title": "Qwen Image model card",
+          "url": "https://huggingface.co/Qwen/Qwen-Image"
+        }
+      ],
+      "dated_uncensored": null,
+      "dated_privacy": "anonymized"
+    },
+    "qwen-image-2-pro": {
+      "name": "Qwen Image 2 Pro",
+      "fit": "A more expensive Qwen 2.0 tier positioned for professional text/detail. Its input limit and ratios match standard, so stronger useful output remains a comparison to make rather than a certainty. Venice model page",
+      "advice": "Alibaba's text-to-image guide\nrecommends subject, scene, style, lighting and composition. Wan 2.7 and Qwen 2.1\ndo not support its separate negative-prompt parameter. Newer Qwen routes can\ninclude upstream prompt rewriting; Venice's optional enhancer being off does\nnot prove every upstream rewrite is disabled. Do not silently import upstream\ndefaults, 4K modes, thinking or rewritten prompts into Venice requests.\n\nThe original Qwen Image model card\nemphasizes text rendering, especially Chinese. Exact desired text and layout\nare sensible starting points across this family, but original-model behavior\ndoes not prove later version parity.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/qwen-image-2-pro"
+        },
+        {
+          "title": "text-to-image guide",
+          "url": "https://www.alibabacloud.com/help/en/model-studio/text-to-image"
+        },
+        {
+          "title": "Qwen Image model card",
+          "url": "https://huggingface.co/Qwen/Qwen-Image"
+        }
+      ],
+      "dated_uncensored": null,
+      "dated_privacy": "anonymized"
+    },
+    "wan-2-7-text-to-image": {
+      "name": "Wan 2.7",
+      "fit": "The standard Wan 2.7 text-to-image route emphasizes instruction understanding. It has a shorter prompt allowance than many text-oriented alternatives; do not import Alibaba’s larger direct-API allowance. Venice model page",
+      "advice": "Alibaba's text-to-image guide\nrecommends subject, scene, style, lighting and composition. Wan 2.7 and Qwen 2.1\ndo not support its separate negative-prompt parameter. Newer Qwen routes can\ninclude upstream prompt rewriting; Venice's optional enhancer being off does\nnot prove every upstream rewrite is disabled. Do not silently import upstream\ndefaults, 4K modes, thinking or rewritten prompts into Venice requests.\n\nThe original Qwen Image model card\nemphasizes text rendering, especially Chinese. Exact desired text and layout\nare sensible starting points across this family, but original-model behavior\ndoes not prove later version parity.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/wan-2-7-image"
+        },
+        {
+          "title": "text-to-image guide",
+          "url": "https://www.alibabacloud.com/help/en/model-studio/text-to-image"
+        },
+        {
+          "title": "Qwen Image model card",
+          "url": "https://huggingface.co/Qwen/Qwen-Image"
+        }
+      ],
+      "dated_uncensored": null,
+      "dated_privacy": "anonymized"
+    },
+    "wan-2-7-pro-text-to-image": {
+      "name": "Wan 2.7 Pro",
+      "fit": "The more expensive Wan 2.7 generation tier emphasizes detail. Alibaba’s direct API supports additional modes, but this Venice snapshot does not expose a 4K tier or those extra controls. Venice model page",
+      "advice": "Alibaba's text-to-image guide\nrecommends subject, scene, style, lighting and composition. Wan 2.7 and Qwen 2.1\ndo not support its separate negative-prompt parameter. Newer Qwen routes can\ninclude upstream prompt rewriting; Venice's optional enhancer being off does\nnot prove every upstream rewrite is disabled. Do not silently import upstream\ndefaults, 4K modes, thinking or rewritten prompts into Venice requests.\n\nThe original Qwen Image model card\nemphasizes text rendering, especially Chinese. Exact desired text and layout\nare sensible starting points across this family, but original-model behavior\ndoes not prove later version parity.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/wan-2-7-pro"
+        },
+        {
+          "title": "text-to-image guide",
+          "url": "https://www.alibabacloud.com/help/en/model-studio/text-to-image"
+        },
+        {
+          "title": "Qwen Image model card",
+          "url": "https://huggingface.co/Qwen/Qwen-Image"
+        }
+      ],
+      "dated_uncensored": null,
+      "dated_privacy": "anonymized"
+    },
+    "grok-imagine-image": {
+      "name": "Grok Imagine",
+      "fit": "The older Grok route emphasizes photographic output and short waits at lower prices than 2.0. Its catalog is private, but this sweep did not establish an uncensored claim. Venice model page",
+      "advice": "xAI's image prompting guide\nfor Imagine 2.0 recommends a clear subject with count/material/framing, then\nart direction, lighting and color. Specify a coherent single image and important\ncrop/focus. Use this as family-level advice for older Grok, not verified parity.\nVenice's selected quality settings and privacy claim remain route-specific.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/grok-imagine-image"
+        },
+        {
+          "title": "image prompting guide",
+          "url": "https://docs.x.ai/developers/model-capabilities/images/prompting-guide"
+        }
+      ],
+      "dated_uncensored": null,
+      "dated_privacy": "private"
+    },
+    "lustify-sdxl": {
+      "name": "Lustify SDXL",
+      "fit": "A community SDXL photographic checkpoint explicitly advertised for uncensored adult imagery. Its 1,500-character cap remains a significant limitation for this owner’s long-prompt workflow. Venice model page",
+      "advice": "Stability's SD3.5 introduction\ndescribes diverse style capability; Venice specifically positions its deployment\ntoward painterly work. Use a clear medium, composition and subject within its\nshort limit. Chroma's model card\nestablishes the architecture/source, but this sweep did not verify a required\nVenice-specific syntax or that FLUX.2's negative-prompt rules transfer to Chroma.\n\nThe author pages linked by Venice for\nLustify and\nWAI could not be read\nthrough the research browser. Their Venice pages were read. Do not invent\ncheckpoint trigger words, weighted-tag syntax, samplers or mandatory quality\ntags. A concise photographic brief for Lustify and clear anime style/composition\nfor WAI are editorial starting points, pending exact-checkpoint evidence.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/lustify-sdxl"
+        },
+        {
+          "title": "SD3.5 introduction",
+          "url": "https://stability.ai/news-updates/introducing-stable-diffusion-3-5"
+        },
+        {
+          "title": "Chroma's model card",
+          "url": "https://huggingface.co/lodestones/Chroma1-HD"
+        },
+        {
+          "title": "Lustify",
+          "url": "https://civitai.com/models/573152/lustify-sdxl-nsfw-checkpoint"
+        },
+        {
+          "title": "WAI",
+          "url": "https://civitai.com/models/827184?modelVersionId=1761560"
+        }
+      ],
+      "dated_uncensored": true,
+      "dated_privacy": "private"
+    },
+    "lustify-v7": {
+      "name": "Lustify v7",
+      "fit": "Version 7 of the adult-oriented photographic checkpoint has Venice’s most_uncensored trait. The trait is promotional metadata, not evidence that every prompt will succeed. Venice model page",
+      "advice": "Stability's SD3.5 introduction\ndescribes diverse style capability; Venice specifically positions its deployment\ntoward painterly work. Use a clear medium, composition and subject within its\nshort limit. Chroma's model card\nestablishes the architecture/source, but this sweep did not verify a required\nVenice-specific syntax or that FLUX.2's negative-prompt rules transfer to Chroma.\n\nThe author pages linked by Venice for\nLustify and\nWAI could not be read\nthrough the research browser. Their Venice pages were read. Do not invent\ncheckpoint trigger words, weighted-tag syntax, samplers or mandatory quality\ntags. A concise photographic brief for Lustify and clear anime style/composition\nfor WAI are editorial starting points, pending exact-checkpoint evidence.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/lustify-v7"
+        },
+        {
+          "title": "SD3.5 introduction",
+          "url": "https://stability.ai/news-updates/introducing-stable-diffusion-3-5"
+        },
+        {
+          "title": "Chroma's model card",
+          "url": "https://huggingface.co/lodestones/Chroma1-HD"
+        },
+        {
+          "title": "Lustify",
+          "url": "https://civitai.com/models/573152/lustify-sdxl-nsfw-checkpoint"
+        },
+        {
+          "title": "WAI",
+          "url": "https://civitai.com/models/827184?modelVersionId=1761560"
+        }
+      ],
+      "dated_uncensored": true,
+      "dated_privacy": "private"
+    },
+    "lustify-v8": {
+      "name": "Lustify v8",
+      "fit": "Version 8 retains the same price and short prompt cap as v7; its listed default steps rise from 20 to 30. No comparative quality or refusal-rate benchmark was performed. Venice model page",
+      "advice": "Stability's SD3.5 introduction\ndescribes diverse style capability; Venice specifically positions its deployment\ntoward painterly work. Use a clear medium, composition and subject within its\nshort limit. Chroma's model card\nestablishes the architecture/source, but this sweep did not verify a required\nVenice-specific syntax or that FLUX.2's negative-prompt rules transfer to Chroma.\n\nThe author pages linked by Venice for\nLustify and\nWAI could not be read\nthrough the research browser. Their Venice pages were read. Do not invent\ncheckpoint trigger words, weighted-tag syntax, samplers or mandatory quality\ntags. A concise photographic brief for Lustify and clear anime style/composition\nfor WAI are editorial starting points, pending exact-checkpoint evidence.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/lustify-v8"
+        },
+        {
+          "title": "SD3.5 introduction",
+          "url": "https://stability.ai/news-updates/introducing-stable-diffusion-3-5"
+        },
+        {
+          "title": "Chroma's model card",
+          "url": "https://huggingface.co/lodestones/Chroma1-HD"
+        },
+        {
+          "title": "Lustify",
+          "url": "https://civitai.com/models/573152/lustify-sdxl-nsfw-checkpoint"
+        },
+        {
+          "title": "WAI",
+          "url": "https://civitai.com/models/827184?modelVersionId=1761560"
+        }
+      ],
+      "dated_uncensored": true,
+      "dated_privacy": "private"
+    },
+    "qwen-image": {
+      "name": "Qwen Image",
+      "fit": "The original Qwen route is positioned around faithful prompts and Chinese/other text. Venice marks it highest_quality, despite newer family options; treat the trait as attributed metadata, not a settled ranking. Venice model page",
+      "advice": "Alibaba's text-to-image guide\nrecommends subject, scene, style, lighting and composition. Wan 2.7 and Qwen 2.1\ndo not support its separate negative-prompt parameter. Newer Qwen routes can\ninclude upstream prompt rewriting; Venice's optional enhancer being off does\nnot prove every upstream rewrite is disabled. Do not silently import upstream\ndefaults, 4K modes, thinking or rewritten prompts into Venice requests.\n\nThe original Qwen Image model card\nemphasizes text rendering, especially Chinese. Exact desired text and layout\nare sensible starting points across this family, but original-model behavior\ndoes not prove later version parity.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/qwen-image"
+        },
+        {
+          "title": "text-to-image guide",
+          "url": "https://www.alibabacloud.com/help/en/model-studio/text-to-image"
+        },
+        {
+          "title": "Qwen Image model card",
+          "url": "https://huggingface.co/Qwen/Qwen-Image"
+        }
+      ],
+      "dated_uncensored": null,
+      "dated_privacy": "anonymized"
+    },
+    "wai-Illustrious": {
+      "name": "Anime (WAI)",
+      "fit": "A dedicated anime checkpoint with an explicit uncensored adult-content claim. Its source is Illustrious XL; exact checkpoint prompt tags were not verified. It is a short-prompt specialist. Venice model page",
+      "advice": "Stability's SD3.5 introduction\ndescribes diverse style capability; Venice specifically positions its deployment\ntoward painterly work. Use a clear medium, composition and subject within its\nshort limit. Chroma's model card\nestablishes the architecture/source, but this sweep did not verify a required\nVenice-specific syntax or that FLUX.2's negative-prompt rules transfer to Chroma.\n\nThe author pages linked by Venice for\nLustify and\nWAI could not be read\nthrough the research browser. Their Venice pages were read. Do not invent\ncheckpoint trigger words, weighted-tag syntax, samplers or mandatory quality\ntags. A concise photographic brief for Lustify and clear anime style/composition\nfor WAI are editorial starting points, pending exact-checkpoint evidence.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/anime"
+        },
+        {
+          "title": "SD3.5 introduction",
+          "url": "https://stability.ai/news-updates/introducing-stable-diffusion-3-5"
+        },
+        {
+          "title": "Chroma's model card",
+          "url": "https://huggingface.co/lodestones/Chroma1-HD"
+        },
+        {
+          "title": "Lustify",
+          "url": "https://civitai.com/models/573152/lustify-sdxl-nsfw-checkpoint"
+        },
+        {
+          "title": "WAI",
+          "url": "https://civitai.com/models/827184?modelVersionId=1761560"
+        }
+      ],
+      "dated_uncensored": true,
+      "dated_privacy": "private"
+    },
+    "z-image-turbo": {
+      "name": "Z-Image Turbo",
+      "fit": "A distilled fast model with Venice’s default/fastest traits and a low price. It offers more prompt room than the 1,500-character specialists; negative prompt and CFG controls would be misleading. Venice model page",
+      "advice": "The official author's guidance\nsupports detailed prompts and says the distilled Turbo model does not use\nnegative prompts or CFG. This applies to Turbo, not the non-distilled Z-Image\nfamily. Venice's fixed eight-step metadata should not become a misleading\nquality slider. Detailed prose is optional advice, not an automatic rewrite.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/z-image-turbo"
+        },
+        {
+          "title": "official author's guidance",
+          "url": "https://huggingface.co/Tongyi-MAI/Z-Image-Turbo/discussions/8"
+        }
+      ],
+      "dated_uncensored": null,
+      "dated_privacy": "private"
+    },
+    "chroma": {
+      "name": "Chroma",
+      "fit": "A community FLUX.1-derived photographic model that Venice explicitly calls uncensored. Its low price, private route and 7,500-character allowance are a distinctive combination, without quality or acceptance guarantees. Venice model page",
+      "advice": "Stability's SD3.5 introduction\ndescribes diverse style capability; Venice specifically positions its deployment\ntoward painterly work. Use a clear medium, composition and subject within its\nshort limit. Chroma's model card\nestablishes the architecture/source, but this sweep did not verify a required\nVenice-specific syntax or that FLUX.2's negative-prompt rules transfer to Chroma.\n\nThe author pages linked by Venice for\nLustify and\nWAI could not be read\nthrough the research browser. Their Venice pages were read. Do not invent\ncheckpoint trigger words, weighted-tag syntax, samplers or mandatory quality\ntags. A concise photographic brief for Lustify and clear anime style/composition\nfor WAI are editorial starting points, pending exact-checkpoint evidence.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/chroma"
+        },
+        {
+          "title": "SD3.5 introduction",
+          "url": "https://stability.ai/news-updates/introducing-stable-diffusion-3-5"
+        },
+        {
+          "title": "Chroma's model card",
+          "url": "https://huggingface.co/lodestones/Chroma1-HD"
+        },
+        {
+          "title": "Lustify",
+          "url": "https://civitai.com/models/573152/lustify-sdxl-nsfw-checkpoint"
+        },
+        {
+          "title": "WAI",
+          "url": "https://civitai.com/models/827184?modelVersionId=1761560"
+        }
+      ],
+      "dated_uncensored": true,
+      "dated_privacy": "private"
+    },
+    "qwen-image-3": {
+      "name": "Qwen Image 3",
+      "fit": "The newer standard Qwen generation tier emphasizes text at low cost, with 1K and 2K equally priced here. Optimization/thinking is supported but is a deliberate option, not an invisible default. Venice model page",
+      "advice": "Alibaba's text-to-image guide\nrecommends subject, scene, style, lighting and composition. Wan 2.7 and Qwen 2.1\ndo not support its separate negative-prompt parameter. Newer Qwen routes can\ninclude upstream prompt rewriting; Venice's optional enhancer being off does\nnot prove every upstream rewrite is disabled. Do not silently import upstream\ndefaults, 4K modes, thinking or rewritten prompts into Venice requests.\n\nThe original Qwen Image model card\nemphasizes text rendering, especially Chinese. Exact desired text and layout\nare sensible starting points across this family, but original-model behavior\ndoes not prove later version parity.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/qwen-image-3"
+        },
+        {
+          "title": "text-to-image guide",
+          "url": "https://www.alibabacloud.com/help/en/model-studio/text-to-image"
+        },
+        {
+          "title": "Qwen Image model card",
+          "url": "https://huggingface.co/Qwen/Qwen-Image"
+        }
+      ],
+      "dated_uncensored": true,
+      "dated_privacy": "anonymized"
+    },
+    "qwen-image-3-pro": {
+      "name": "Qwen Image 3 Pro",
+      "fit": "The newer Pro tier emphasizes detailed prompt adherence and text. Its 2K tier costs more than 1K, unlike standard Qwen Image 3; set expectations from the selected matrix. Venice model page",
+      "advice": "Alibaba's text-to-image guide\nrecommends subject, scene, style, lighting and composition. Wan 2.7 and Qwen 2.1\ndo not support its separate negative-prompt parameter. Newer Qwen routes can\ninclude upstream prompt rewriting; Venice's optional enhancer being off does\nnot prove every upstream rewrite is disabled. Do not silently import upstream\ndefaults, 4K modes, thinking or rewritten prompts into Venice requests.\n\nThe original Qwen Image model card\nemphasizes text rendering, especially Chinese. Exact desired text and layout\nare sensible starting points across this family, but original-model behavior\ndoes not prove later version parity.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/qwen-image-3-pro"
+        },
+        {
+          "title": "text-to-image guide",
+          "url": "https://www.alibabacloud.com/help/en/model-studio/text-to-image"
+        },
+        {
+          "title": "Qwen Image model card",
+          "url": "https://huggingface.co/Qwen/Qwen-Image"
+        }
+      ],
+      "dated_uncensored": true,
+      "dated_privacy": "anonymized"
+    },
+    "qwen-image-2-1-turbo": {
+      "name": "Qwen Image 2.1 Turbo",
+      "fit": "The fast Qwen 2.1 tier emphasizes efficient iteration at a low equal price for 1K/2K. Its upstream family does not support a separate negative prompt, despite generic Venice schema fields. Venice model page",
+      "advice": "Alibaba's text-to-image guide\nrecommends subject, scene, style, lighting and composition. Wan 2.7 and Qwen 2.1\ndo not support its separate negative-prompt parameter. Newer Qwen routes can\ninclude upstream prompt rewriting; Venice's optional enhancer being off does\nnot prove every upstream rewrite is disabled. Do not silently import upstream\ndefaults, 4K modes, thinking or rewritten prompts into Venice requests.\n\nThe original Qwen Image model card\nemphasizes text rendering, especially Chinese. Exact desired text and layout\nare sensible starting points across this family, but original-model behavior\ndoes not prove later version parity.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/qwen-image-2-1-turbo"
+        },
+        {
+          "title": "text-to-image guide",
+          "url": "https://www.alibabacloud.com/help/en/model-studio/text-to-image"
+        },
+        {
+          "title": "Qwen Image model card",
+          "url": "https://huggingface.co/Qwen/Qwen-Image"
+        }
+      ],
+      "dated_uncensored": true,
+      "dated_privacy": "anonymized"
+    },
+    "qwen-image-2-1-pro": {
+      "name": "Qwen Image 2.1 Pro",
+      "fit": "The fuller-capacity Qwen 2.1 route trades price for capability relative to Turbo. Its generation controls are separate from the reference limits advertised for the edit sibling. Venice model page",
+      "advice": "Alibaba's text-to-image guide\nrecommends subject, scene, style, lighting and composition. Wan 2.7 and Qwen 2.1\ndo not support its separate negative-prompt parameter. Newer Qwen routes can\ninclude upstream prompt rewriting; Venice's optional enhancer being off does\nnot prove every upstream rewrite is disabled. Do not silently import upstream\ndefaults, 4K modes, thinking or rewritten prompts into Venice requests.\n\nThe original Qwen Image model card\nemphasizes text rendering, especially Chinese. Exact desired text and layout\nare sensible starting points across this family, but original-model behavior\ndoes not prove later version parity.",
+      "advice_scope": "Dated family or exact-version advice; applicability and gaps are stated in the text. Practical starting points are editorial, not benchmarks.",
+      "sources": [
+        {
+          "title": "Venice model page",
+          "url": "https://docs.venice.ai/models/qwen-image-2-1-pro"
+        },
+        {
+          "title": "text-to-image guide",
+          "url": "https://www.alibabacloud.com/help/en/model-studio/text-to-image"
+        },
+        {
+          "title": "Qwen Image model card",
+          "url": "https://huggingface.co/Qwen/Qwen-Image"
+        }
+      ],
+      "dated_uncensored": true,
+      "dated_privacy": "anonymized"
+    }
+  }
+}
