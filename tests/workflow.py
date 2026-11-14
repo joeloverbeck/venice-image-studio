@@ -15,10 +15,11 @@ class Provider(http.server.BaseHTTPRequestHandler):
     status = 200
     response_headers = {}
     catalog_status = 200
+    pricing = {'generation':{'usd':0.02}}
     raw_body = None
     def log_message(self,*args): pass
     def do_GET(self):
-        data={'data':[{'id':'chroma','model_spec':{'name':'Chroma','offline':False,'privacy':'private','uncensored':True,'pricing':{'generation':{'usd':0.02}},'constraints':{'promptCharacterLimit':5000,'widthHeightDivisor':16}}}]}
+        data={'data':[{'id':'chroma','model_spec':{'name':'Chroma','offline':False,'privacy':'private','uncensored':True,'pricing':self.pricing,'constraints':{'promptCharacterLimit':5000,'widthHeightDivisor':16}}}]}
         self.send_response(self.catalog_status);self.end_headers();self.wfile.write(json.dumps(data).encode())
     def do_POST(self):
         self.requests.append((self.headers.get('Authorization'),json.loads(self.rfile.read(int(self.headers['Content-Length'])))))
@@ -31,6 +32,7 @@ class Provider(http.server.BaseHTTPRequestHandler):
 class Workflow(unittest.TestCase):
     def setUp(self):
         Provider.requests=[];Provider.delay=0;Provider.status=200;Provider.catalog_status=200;Provider.response_headers={};Provider.raw_body=None;Provider.response={'images':[base64.b64encode(PNG).decode()],'seed':42}
+        Provider.pricing={'generation':{'usd':0.02}}
         self.tmp=tempfile.TemporaryDirectory(prefix='venice-test-',dir='/var/tmp');self.library=pathlib.Path(self.tmp.name)/'library'
         self.provider=http.server.ThreadingHTTPServer(('127.0.0.1',0),Provider)
         threading.Thread(target=self.provider.serve_forever,daemon=True).start();self.start()
@@ -247,4 +249,28 @@ class Workflow(unittest.TestCase):
         with self.assertRaises(urllib.error.HTTPError) as failure:self.call('/api/generate',{'draft_id':d['id'],'catalog_fetched_at':seen})
         self.assertEqual(failure.exception.code,409)
         self.assertEqual(len(Provider.requests),0)
+    def test_first_path_estimate_matches_dispatch_pricing(self):
+        for pricing,reason in [
+            ({'generation':{'usd':0.02}},None),
+            ({'generation':{'usd':0.02},'resolutions':{'1K':{'usd':0.08}}},'pricing contract changed'),
+            ({'generation':{'usd':'unknown'}},'No usable estimate'),
+        ]:
+            with self.subTest(pricing=pricing):
+                Provider.pricing=pricing
+                d=self.draft()
+                self.state=self.call('/api/catalog/refresh',{})
+                estimate=self.state['estimate']
+                requests=len(Provider.requests)
+                if reason is None:
+                    self.assertEqual(estimate['usd'],0.02)
+                    self.assertEqual(estimate['fetched_at'],self.state['catalog']['fetched_at'])
+                    a=self.finish(self.call('/api/generate',{'draft_id':d['id']})['id'])
+                    self.assertEqual(a['estimate'],estimate)
+                    self.assertEqual(len(Provider.requests),requests+1)
+                else:
+                    self.assertNotIn('usd',estimate)
+                    self.assertIn(reason,estimate['unavailable_reason'])
+                    with self.assertRaises(urllib.error.HTTPError) as failure:self.call('/api/generate',{'draft_id':d['id']})
+                    self.assertEqual(json.loads(failure.exception.read())['error'],estimate['unavailable_reason'])
+                    self.assertEqual(len(Provider.requests),requests)
 if __name__=='__main__':unittest.main()

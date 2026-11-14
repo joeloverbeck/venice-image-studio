@@ -304,8 +304,30 @@ async fn css() -> impl IntoResponse {
 }
 async fn state(State(app): State<App>) -> Json<Value> {
     let m = app.state.lock().unwrap();
+    let estimate = first_path_estimate(&m.catalog, &m.draft.model)
+        .unwrap_or_else(|reason| json!({"unavailable_reason":reason}));
     Json(
-        json!({"token":app.token,"draft":m.draft,"catalog":m.catalog,"catalog_error":m.catalog_error,"attempts":m.attempts.values().rev().collect::<Vec<_>>(),"inflight":m.inflight,"setup_error":m.setup,"credential_present":app.provider.key.is_some(),"library":app.library.as_ref().map(|l|l.root.display().to_string())}),
+        json!({"token":app.token,"draft":m.draft,"catalog":m.catalog,"estimate":estimate,"catalog_error":m.catalog_error,"attempts":m.attempts.values().rev().collect::<Vec<_>>(),"inflight":m.inflight,"setup_error":m.setup,"credential_present":app.provider.key.is_some(),"library":app.library.as_ref().map(|l|l.root.display().to_string())}),
+    )
+}
+fn first_path_estimate(catalog: &Value, model_id: &str) -> Result<Value, &'static str> {
+    if model_id != "chroma" {
+        return Err("This first slice supports the selected Chroma generation path.");
+    }
+    let model = catalog["models"]
+        .as_array()
+        .and_then(|models| models.iter().find(|model| model["id"] == model_id))
+        .ok_or("Refresh the catalog; selected model is unavailable.")?;
+    let pricing = &model["model_spec"]["pricing"];
+    let price = pricing["generation"]["usd"]
+        .as_f64()
+        .filter(|price| price.is_finite() && *price >= 0.0)
+        .ok_or("No usable estimate is available; refresh the catalog before spending.")?;
+    if !pricing["resolutions"].is_null() || !pricing["quality"].is_null() {
+        return Err("The selected model's pricing contract changed; this request needs review.");
+    }
+    Ok(
+        json!({"usd":price,"source":catalog["source"],"fetched_at":catalog["fetched_at"],"kind":"estimate, not charge or cap"}),
     )
 }
 async fn draft(State(app): State<App>, Json(d): Json<Draft>) -> ApiResult<Draft> {
@@ -422,17 +444,7 @@ async fn generate(State(app): State<App>, Json(g): Json<Generate>) -> ApiResult<
                 "Refreshed model no longer supports the selected 1024-pixel size.",
             ));
         }
-        let price = spec["pricing"]["generation"]["usd"]
-            .as_f64()
-            .filter(|p| p.is_finite() && *p >= 0.0)
-            .ok_or_else(|| {
-                bad("No usable estimate is available; refresh the catalog before spending.")
-            })?;
-        if !spec["pricing"]["resolutions"].is_null() || !spec["pricing"]["quality"].is_null() {
-            return Err(bad(
-                "The selected model's pricing contract changed; this request needs review.",
-            ));
-        }
+        let estimate = first_path_estimate(&m.catalog, &d.model).map_err(bad)?;
         let request = json!({"model":d.model,"prompt":d.prompt,"width":1024,"height":1024,"variants":1,"safe_mode":d.safe_mode,"enhance_prompt":false,"return_binary":false,"embed_exif_metadata":false,"format":"png"});
         let a = Attempt {
             recipe_version: 1,
@@ -458,7 +470,7 @@ async fn generate(State(app): State<App>, Json(g): Json<Generate>) -> ApiResult<
             model_snapshot: model,
             catalog_source: m.catalog["source"].clone(),
             catalog_fetched_at: m.catalog["fetched_at"].clone(),
-            estimate: json!({"usd":price,"source":m.catalog["source"],"fetched_at":m.catalog["fetched_at"],"kind":"estimate, not charge or cap"}),
+            estimate,
             requested_seed: None,
             returned_seed: Value::Null,
             outcome: "pending".into(),
