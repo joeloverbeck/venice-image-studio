@@ -1,0 +1,21 @@
+# Private local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Build and editor output
+/target/
+/node_modules/
+/web/node_modules/
+/web/dist/
+.DS_Store
+*.swp
+
+# Defensive only: runtime data must be stored outside this repository.
+/data/
+/library/
+/outputs/
+/logs/
+*.log
