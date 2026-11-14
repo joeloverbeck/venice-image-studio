@@ -1,5 +1,6 @@
 mod library;
 mod models;
+mod outcomes;
 mod provider;
 use axum::{
     Json, Router,
@@ -36,6 +37,9 @@ fn bad(message: impl Into<String>) -> (StatusCode, Json<Value>) {
 fn now() -> String {
     Utc::now().to_rfc3339()
 }
+fn yes() -> bool {
+    true
+}
 #[derive(Clone, Serialize, Deserialize)]
 struct Draft {
     id: Uuid,
@@ -68,6 +72,8 @@ struct ResultImage {
     bytes: usize,
     sha256: String,
     relative_path: String,
+    #[serde(default = "yes")]
+    available: bool,
 }
 #[derive(Clone, Serialize, Deserialize)]
 struct Attempt {
@@ -99,6 +105,10 @@ struct Attempt {
     outcome_summary: String,
     billing: Value,
     provider: Value,
+    #[serde(default)]
+    counts: Value,
+    #[serde(default = "yes")]
+    can_retry_local_save: bool,
     results: Vec<ResultImage>,
 }
 struct Memory {
@@ -202,21 +212,35 @@ async fn run() -> Result<(), String> {
                 a.status = "indeterminate".into();
                 a.outcome = "indeterminate".into();
                 a.summary="Studio stopped after dispatch. Provider outcome and billing are unknown. Nothing was retried.".into();
+                a.outcome_summary = a.summary.clone();
                 save_recipe(l, &a)?;
             }
             if a.status == "saving" || a.status == "save_failed" {
-                let all = !a.results.is_empty()
-                    && a.results.iter().all(|r| {
-                        l.read(&r.relative_path, MAX_ORIGINAL_BYTES as u64)
-                            .is_ok_and(|b| hash(&b) == r.sha256)
-                    });
-                if all {
-                    a.status = "saved".into();
-                    a.summary = "Recovered durable originals after an interrupted save.".into();
+                for r in &mut a.results {
+                    r.available = l
+                        .read(&r.relative_path, MAX_ORIGINAL_BYTES as u64)
+                        .is_ok_and(|b| hash(&b) == r.sha256);
+                }
+                let available = a.results.iter().filter(|r| r.available).count();
+                if available == a.results.len() {
+                    a.status = if a.results.is_empty() {
+                        a.outcome.clone()
+                    } else {
+                        "saved".into()
+                    };
+                    a.summary = format!(
+                        "{} Recovered durable originals and attempt record after an interrupted save.",
+                        a.outcome_summary.replace("; saving locally.", ".")
+                    );
                     save_recipe(l, &a)?;
                 } else {
                     a.status = "save_failed".into();
-                    a.summary="Save was interrupted. Only originals still available locally can be recovered; nothing was regenerated.".into();
+                    a.can_retry_local_save = false;
+                    a.summary = format!(
+                        "{} Save was interrupted: {available} of {} originals are available locally. Download available originals; missing or damaged bytes cannot be recovered by a local save retry. Nothing was regenerated.",
+                        a.outcome_summary,
+                        a.results.len()
+                    );
                 }
             }
             // Reinterpret retained response evidence for older recipes in memory only.
@@ -545,6 +569,8 @@ async fn generate(State(app): State<App>, Json(g): Json<Generate>) -> ApiResult<
             summary: "Waiting for Venice. This request continues if the browser reloads.".into(),
             billing: json!({"charge":"unknown","refund":"unknown"}),
             provider: Value::Null,
+            counts: json!({"requested":d.settings.variants,"returned_items":null,"retained_originals":0,"provider_omitted":null}),
+            can_retry_local_save: true,
             results: vec![],
         };
         save_recipe(l, &a).map_err(bad)?;
@@ -576,7 +602,7 @@ async fn dispatch(app: App, id: Uuid) {
                 .redact(&json!({"http_status":status,"body":body,"headers":headers}));
             let encoded = serde_json::to_string(&details).unwrap();
             a.provider = if encoded.len() > 32768 {
-                json!({"http_status":status,"capture_truncated":true,"text":encoded.chars().take(16000).collect::<String>()})
+                json!({"http_status":status,"headers":details["headers"],"capture_truncated":true,"body":{"capture_truncated":true,"text":serde_json::to_string(&details["body"]).unwrap().chars().take(16000).collect::<String>()}})
             } else {
                 details
             };
@@ -607,36 +633,24 @@ async fn dispatch(app: App, id: Uuid) {
                 a.provider["local_decode_errors"] = json!(decode_errors);
                 a.provider["local_decode_errors_truncated"] = json!(invalid > 16);
             }
-            if !a.results.is_empty() {
-                a.status = "saving".into();
-                a.outcome = if invalid > 0 { "partial" } else { "received" }.into();
-                a.summary = if invalid > 0 {
-                    format!(
-                        "Received {} valid originals; {invalid} items could not be retained as valid images.",
-                        a.results.len()
-                    )
-                } else {
-                    "Received originals; saving locally.".into()
-                };
+            let outcome = outcomes::interpret(
+                status,
+                &body,
+                &headers,
+                a.request["variants"].as_u64().unwrap_or(1),
+                a.results.len(),
+                invalid,
+            );
+            a.outcome = outcome.kind.into();
+            a.status = if a.results.is_empty() {
+                outcome.kind
             } else {
-                a.status = if body["body_incomplete"] == true {
-                    "indeterminate"
-                } else if status == 401 || status == 403 {
-                    "access_error"
-                } else if status == 429 {
-                    "rate_limited"
-                } else if status == 422 {
-                    "rejected"
-                } else {
-                    "failed"
-                }
-                .into();
-                a.summary = if body["body_incomplete"] == true {
-                    "Provider body incomplete or exceeded capture bounds. Outcome and billing are unknown; no retry was sent.".into()
-                } else {
-                    match status{401|403=>"Venice rejected access. Check the private API key and account permissions, then restart Studio.",422=>"Venice rejected the request. Inspect provider details; a policy reason is not assumed.",429=>"Venice rate limited the request. No retry was sent.",_=>"No valid image was received. Inspect provider details. Billing and refund are unknown."}.into()
-                };
+                "saving"
             }
+            .into();
+            a.summary = outcome.summary;
+            a.counts = outcome.counts;
+            a.billing = app.provider.redact(&outcome.billing);
         }
     }
     if a.status != "saving" {
@@ -673,11 +687,10 @@ fn persist_attempt(app: &App, m: &mut Memory, id: Uuid) {
         }
         if !a.results.is_empty() {
             a.status = "saved".into();
-            a.summary = if a.outcome == "partial" || a.outcome == "flagged" {
-                format!("{} Originals and recipe saved locally.", a.outcome_summary)
-            } else {
-                "Originals and recipe saved locally.".into()
-            };
+            a.summary = format!(
+                "{} Originals and recipe saved locally.",
+                a.outcome_summary.replace("; saving locally.", ".")
+            );
         } else {
             a.status = a.outcome.clone();
             a.summary = a.outcome_summary.clone();
@@ -686,7 +699,10 @@ fn persist_attempt(app: &App, m: &mut Memory, id: Uuid) {
     })();
     if let Err(e) = result {
         a.status = "save_failed".into();
-        a.summary = e;
+        a.summary = format!(
+            "{} Local save failed: {e} Keep Studio open. Download received originals or retry local save; this does not generate again.",
+            a.outcome_summary
+        );
         let _ = save_recipe(l, &a);
     } else {
         for r in &a.results {
@@ -703,7 +719,7 @@ fn explain_response_flags(a: &mut Attempt) {
     let blurred = headers["x-venice-is-blurred"]
         .as_str()
         .is_some_and(|s| s.eq_ignore_ascii_case("true"));
-    if (!flagged && !blurred) || a.outcome_summary.contains("Response-wide flags:") {
+    if !flagged && !blurred {
         return;
     }
     let flags = match (flagged, blurred) {
@@ -712,22 +728,30 @@ fn explain_response_flags(a: &mut Attempt) {
         _ => "blurred output",
     };
     let body = &a.provider["body"];
-    let reason = if ["reason", "error", "message"]
-        .iter()
-        .any(|key| !body[key].is_null())
-    {
+    let reason = if a.provider["capture_truncated"] == true || body["capture_truncated"] == true {
+        "Reason details may be incomplete because capture was truncated; inspect retained details."
+    } else if outcomes::has_explanation(body) {
         "Inspect provider details for the supplied explanation."
     } else {
         "No specific reason was supplied."
     };
     let warning = format!(
-        "Response-wide flags: Venice reports {flags}. {reason} Flags do not identify individual images. Billing and refund are unknown."
+        "Response-wide flags: Venice reports {flags}. {reason} Flags do not identify individual images."
     );
     if a.outcome == "received" {
         a.outcome = "flagged".into();
     }
-    a.outcome_summary = format!("{warning} {}", a.outcome_summary);
-    a.summary = format!("{warning} {}", a.summary);
+    for summary in [&mut a.outcome_summary, &mut a.summary] {
+        if !summary.contains("Response-wide flags:") {
+            *summary = format!("{warning} {summary}");
+        }
+        if !summary.contains("Billing") && !summary.contains("billing") {
+            summary.push_str(" Billing and refund are unknown.");
+        }
+        if a.status == "saved" {
+            *summary = summary.replace("; saving locally.", ".");
+        }
+    }
 }
 fn save_recipe(l: &Library, a: &Attempt) -> Result<(), String> {
     l.write(
@@ -774,6 +798,7 @@ fn decode(value: &Value) -> Result<(ResultImage, Vec<u8>), String> {
         bytes: bytes.len(),
         sha256: hash(&bytes),
         relative_path: format!("{id}.original"),
+        available: true,
     };
     Ok((r, bytes))
 }
@@ -817,6 +842,11 @@ async fn retry_save(State(app): State<App>, Path(id): Path<Uuid>) -> ApiResult<A
         .ok_or_else(|| bad("Attempt not found."))?;
     if a.status != "save_failed" {
         return Err(bad("This attempt does not need a local save retry."));
+    }
+    if !a.can_retry_local_save {
+        return Err(bad(
+            "Some originals are missing after interruption. Download the originals still available; a local save retry cannot recover lost bytes.",
+        ));
     }
     persist_attempt(&app, &mut m, id);
     Ok(Json(m.attempts[&id].clone()))

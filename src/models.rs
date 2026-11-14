@@ -25,6 +25,7 @@ pub struct Settings {
     pub resolution: Option<String>,
     pub quality: Option<String>,
     pub format: String,
+    pub variants: u32,
     pub seed: Option<i64>,
     pub negative_prompt: Option<String>,
     pub steps: Option<u32>,
@@ -44,6 +45,7 @@ impl Default for Settings {
             resolution: None,
             quality: None,
             format: "png".into(),
+            variants: 1,
             seed: None,
             negative_prompt: None,
             steps: None,
@@ -59,7 +61,11 @@ impl Settings {
     pub fn from_request(request: &Value) -> Result<Self, String> {
         let mut value = request.clone();
         let object = value.as_object_mut().ok_or("This saved request is not an object. Inspect the original recipe; no settings were substituted.")?;
-        if request["variants"] != 1 || request["enhance_prompt"] != false {
+        if !request["variants"]
+            .as_u64()
+            .is_some_and(|n| (1..=4).contains(&n))
+            || request["enhance_prompt"] != false
+        {
             return Err("This recipe requests unsupported variants or enhancement. Inspect its original request; no settings were substituted.".into());
         }
         if request.get("aspect_ratio").is_none()
@@ -75,7 +81,6 @@ impl Settings {
             "prompt",
             "safe_mode",
             "enhance_prompt",
-            "variants",
             "return_binary",
             "embed_exif_metadata",
         ] {
@@ -233,7 +238,7 @@ pub fn contract(model: &Value) -> Value {
             .map(String::from),
         ..Settings::default()
     };
-    json!({"sizing":mode,"pixel_max":1280,"divisor":constraints["widthHeightDivisor"],
+    json!({"sizing":mode,"pixel_max":1280,"variants_min":1,"variants_max":4,"divisor":constraints["widthHeightDivisor"],
         "aspect_ratios":ratios,"resolutions":resolutions,"qualities":qualities,"formats":["png","jpeg","webp"],
         "seed":seed,"negative_prompt":negative,"steps":steps,"cfg_scale":cfg,"style_preset":style,
         "steps_max":constraints["steps"]["max"],"steps_default":constraints["steps"]["default"],"pixel_presets":presets,
@@ -280,7 +285,8 @@ pub fn estimate(catalog: &Value, model: &Value, settings: &Settings) -> Result<V
     if settings.optimize_prompt {
         extras.push(json!({"name":"Optional optimization/thinking","pricing":"Model base-price estimate; no separate optimization tariff is published.","separate_usd":Value::Null}));
     }
-    let mut estimate = json!({"usd":base,"base_usd":base,"extras":extras,"basis":basis,"source":catalog["source"],"fetched_at":catalog["fetched_at"],"kind":"estimate, not charge or cap","warning":"Provider metadata may be stale; actual charge and refund are unknown."});
+    let total = base * f64::from(settings.variants);
+    let mut estimate = json!({"usd":total,"base_usd":total,"per_image_usd":base,"requested_count":settings.variants,"extras":extras,"basis":basis,"source":catalog["source"],"fetched_at":catalog["fetched_at"],"kind":"estimate, not charge or cap","warning":"Provider metadata may be stale; actual charge and refund are unknown."});
     if settings.web_search {
         estimate.as_object_mut().unwrap().remove("usd");
         estimate["extras"].as_array_mut().unwrap().push(json!({"name":"Web search","usd":Value::Null,"pricing":"Unknown image-search surcharge: current schema warns of extra cost; an older provider reference says unchanged pricing."}));
@@ -311,7 +317,10 @@ pub fn prepare(
         )),
         None => errors.push("Selected model's prompt limit is unknown.".into()),
     }
-    let mut request = json!({"model":model["id"],"prompt":prompt,"safe_mode":safe,"enhance_prompt":false,"return_binary":false,"embed_exif_metadata":false,"variants":1,"format":s.format});
+    if !(1..=4).contains(&s.variants) {
+        errors.push("Choose 1–4 images per attempt, as documented for JSON output.".into());
+    }
+    let mut request = json!({"model":model["id"],"prompt":prompt,"safe_mode":safe,"enhance_prompt":false,"return_binary":false,"embed_exif_metadata":false,"variants":s.variants,"format":s.format});
     if c["sizing"] == "unknown" {
         errors.push("Required sizing contract is unknown. This model remains browsable; generation is unavailable.".into())
     } else if c["sizing"] != s.sizing {
