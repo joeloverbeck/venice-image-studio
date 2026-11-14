@@ -63,3 +63,20 @@ No application implementation, paid requests, model benchmarking, peer-repositor
 changes or deployment is included in the founding publication. For future work,
 use the current issue and the acceptance boundary in
 `docs/foundation/05-delivery-and-acceptance.md`.
+
+## Agent skills
+
+### Issue tracker
+
+Use GitHub Issues in `joeloverbeck/venice-image-studio`; before tracker operations,
+read `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Use the five default triage labels; before classifying or labeling work,
+read `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Use a single-context layout: root `GLOSSARY.md` and `docs/adr/`; before domain
+exploration, read `docs/agents/domain.md`.
