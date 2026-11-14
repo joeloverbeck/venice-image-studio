@@ -80,8 +80,9 @@ Pixel routes validate bounds/divisors; ratio routes send only advertised ratios,
 tiers and qualities. Requested size and actual returned dimensions stay separate:
 the first Chroma checkpoint requested 1024×1024 and returned 1536×1536.
 
-One explicit Generate requests one image. Safe mode starts off and remembers later
-choices; enhancement and embedded metadata stay disabled. Advanced controls appear
+One explicit Generate submits one attempt with one image by default. Advanced
+controls allow 1–4 images; the count reaches the total price estimate, request,
+recipe and reuse. Safe mode starts off and remembers later choices; enhancement and embedded metadata stay disabled. Advanced controls appear
 with documented support, uncertainty and sources. Seed omission has Venice’s
 random/default-zero discrepancy; an explicit seed never promises identical output.
 Web search and optional optimization begin off. The latter uses the provider’s
@@ -106,12 +107,26 @@ before dispatch and holds a library lock against concurrent Studio processes.
 Checkout updates or removal do not remove this library. Retention is local,
 without encryption or automatic cleanup.
 
+Results keep requested, received, invalid and provider-reported omitted counts
+separate. Response-wide blur and content-violation flags remain visible alongside
+saved originals, including when reopening older recipes. These flags do not identify
+individual images or explain the policy reason. Structured policy codes and the
+native 422 retry-advice field can identify a refusal; arbitrary error text, a 422
+alone or black pixels cannot. Unknown error shapes remain inspectable within
+bounded, redacted details. Provider billing/refund assertions are unverified;
+missing amounts remain unknown. Suggestions and retry advice never change or
+resubmit a draft.
+
 Drafts autosave; wait for **Draft saved locally** before closing. Reload reconnects
 to an in-flight attempt. A process stop after dispatch becomes **indeterminate**
 with unknown billing, without replay. A local saving failure keeps received bytes
 available in the running app: download them or use **Retry local save**, which
 never generates again. Restart can recover fully written originals from the
-pending recipe; missing bytes after process loss cannot be invented. Keep Studio
+pending recipe and shows which originals are unavailable. Missing or damaged
+bytes after process loss cannot be recovered by a save retry. An interrupted native
+JSON response retains complete originals already received; an incomplete image
+cannot be reconstructed. A new Generate is a separate paid attempt, and a failed
+or interrupted attempt may already have been charged. Keep Studio
 open during a save failure. **Use recipe as new draft** makes an editable copy
 without changing the previous recipe or making a paid request. Original downloads
 preserve provider bytes, which may already contain provider metadata; the recipe
@@ -136,12 +151,14 @@ cargo build --locked --features test-support
 python3 tests/workflow.py
 ```
 
+The checks also require a C compiler for the synthetic filesystem-space fault.
 The high-seam checks start the actual Rust server with a controlled loopback HTTP
 provider and a temporary external library under `/var/tmp`. They cover exact long
 Unicode prompts/settings, original/download/recipe identity, restart/reuse,
 duplicate dispatch protection, interrupted requests, a crash between original and recipe finalization, local
 save retry, missing/invalid credentials, storage/resource limits, all 48 researched base request paths, model-switch conflicts, stale
-catalogs/styles, documented controls, Unicode limits, price matrices, response flags, partial/corrupt images, redirects, secret redaction and
+catalogs/styles, documented controls, Unicode limits, price matrices, variants and response-wide flags, structured/unknown failures,
+partial/corrupt/interrupted images, low-space/permission failures, redirects, secret redaction and
 Host/Origin/token/path boundaries. Fixtures are synthetic and not quality evidence.
 The `test-support` feature enables `--fixture-provider` for loopback only, ignores
 `.env` and process credentials, and sends a fixed synthetic credential. Ordinary

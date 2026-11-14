@@ -129,10 +129,37 @@ impl Provider {
                 }
             }
         }
-        let body = match bounded(response, 192 * 1024 * 1024).await {
-            Ok(bytes) => serde_json::from_slice(&bytes).unwrap_or_else(|_|json!({"raw_text":String::from_utf8_lossy(&bytes[..bytes.len().min(32768)]),"capture_truncated":bytes.len()>32768})),
-            Err(message) => json!({"capture_error":message,"body_incomplete":true}),
+        let (bytes, read_error) = capture(response, 192 * 1024 * 1024).await;
+        let mut body = match serde_json::from_slice::<Value>(&bytes) {
+            Ok(body) => body,
+            Err(error) => {
+                // A native JSON response can end after complete originals but before
+                // the next item. Serde's grammar determines complete values; never
+                // infer missing base64 bytes or scan arbitrary strings for images.
+                let mut recovered = serde_json::Map::new();
+                let mut decoder = serde_json::Deserializer::from_slice(&bytes);
+                let _ = serde::de::Deserializer::deserialize_map(
+                    &mut decoder,
+                    ImageResponsePrefix(&mut recovered),
+                );
+                if recovered.contains_key("images") {
+                    recovered.insert("body_incomplete".into(), json!(true));
+                    recovered.insert("json_error".into(), json!(error.to_string()));
+                    recovered.insert("capture_note".into(), json!("Only complete JSON members retained; incomplete image payload text is omitted."));
+                    Value::Object(recovered)
+                } else {
+                    json!({"raw_text":String::from_utf8_lossy(&bytes[..bytes.len().min(32768)]),"capture_truncated":bytes.len()>32768})
+                }
+            }
         };
+        if let Some(error) = read_error {
+            if !body.is_object() {
+                body = json!({"captured_value":body});
+            }
+            body["capture_error"] = json!(error);
+            body["body_incomplete"] = json!(true);
+            body["transport_incomplete"] = json!(true);
+        }
         Ok((status, body, Value::Object(headers)))
     }
     #[cfg(feature = "test-support")]
@@ -187,7 +214,6 @@ impl Provider {
             }
             Value::Object(o) => Value::Object(
                 o.iter()
-                    .filter(|(k, _)| !matches!(k.as_str(), "images" | "image" | "b64_json"))
                     .map(|(k, v)| {
                         (
                             self.redact(&Value::String(k.clone()))
@@ -215,26 +241,81 @@ impl Provider {
         }
     }
 }
-async fn bounded(mut response: reqwest::Response, max: usize) -> Result<Vec<u8>, String> {
+// This visitor recovers only complete top-level native response members and
+// complete elements of its images array. It is not a repair parser.
+struct ImageResponsePrefix<'a>(&'a mut serde_json::Map<String, Value>);
+impl<'de> serde::de::Visitor<'de> for ImageResponsePrefix<'_> {
+    type Value = ();
+    fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        f.write_str("a native image response object")
+    }
+    fn visit_map<A: serde::de::MapAccess<'de>>(self, mut map: A) -> Result<(), A::Error> {
+        while let Some(key) = map.next_key::<String>()? {
+            if key == "images" {
+                let mut images = Vec::new();
+                let result = map.next_value_seed(ImageArrayPrefix(&mut images));
+                self.0.insert(key, Value::Array(images));
+                result?;
+            } else {
+                self.0.insert(key, map.next_value::<Value>()?);
+            }
+        }
+        Ok(())
+    }
+}
+struct ImageArrayPrefix<'a>(&'a mut Vec<Value>);
+impl<'de> serde::de::DeserializeSeed<'de> for ImageArrayPrefix<'_> {
+    type Value = ();
+    fn deserialize<D: serde::de::Deserializer<'de>>(self, decoder: D) -> Result<(), D::Error> {
+        decoder.deserialize_seq(self)
+    }
+}
+impl<'de> serde::de::Visitor<'de> for ImageArrayPrefix<'_> {
+    type Value = ();
+    fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        f.write_str("the native images array")
+    }
+    fn visit_seq<A: serde::de::SeqAccess<'de>>(self, mut array: A) -> Result<(), A::Error> {
+        while let Some(value) = array.next_element::<Value>()? {
+            self.0.push(value);
+        }
+        Ok(())
+    }
+}
+async fn bounded(response: reqwest::Response, max: usize) -> Result<Vec<u8>, String> {
+    let (bytes, error) = capture(response, max).await;
+    error.map_or(Ok(bytes), |e| Err(e.into()))
+}
+async fn capture(mut response: reqwest::Response, max: usize) -> (Vec<u8>, Option<&'static str>) {
     if response.content_length().is_some_and(|n| n > max as u64) {
-        return Err(
-            "Provider body exceeds the capture limit. Outcome/billing unknown; no retry sent."
-                .into(),
+        return (
+            Vec::new(),
+            Some(
+                "Provider body exceeds the capture limit. Outcome/billing unknown; no retry sent.",
+            ),
         );
     }
     let mut bytes = Vec::new();
-    while let Some(chunk) = response
-        .chunk()
-        .await
-        .map_err(|_| "Provider body incomplete. Outcome/billing unknown; no retry sent.")?
-    {
+    loop {
+        let chunk = match response.chunk().await {
+            Ok(Some(chunk)) => chunk,
+            Ok(None) => return (bytes, None),
+            Err(_) => {
+                return (
+                    bytes,
+                    Some("Provider body incomplete. Outcome/billing unknown; no retry sent."),
+                );
+            }
+        };
         if bytes.len() + chunk.len() > max {
-            return Err(
-                "Provider body exceeds the capture limit. Outcome/billing unknown; no retry sent."
-                    .into(),
+            bytes.extend_from_slice(&chunk[..max - bytes.len()]);
+            return (
+                bytes,
+                Some(
+                    "Provider body exceeds the capture limit. Outcome/billing unknown; no retry sent.",
+                ),
             );
         }
         bytes.extend_from_slice(&chunk);
     }
-    Ok(bytes)
 }
