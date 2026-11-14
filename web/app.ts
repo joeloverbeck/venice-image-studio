@@ -100,18 +100,19 @@ prompt.addEventListener("input", edited);
 safe.addEventListener("change", edited);
 function render() {
   const model = state.catalog?.models?.find((m: any) => m.id === current.model);
-  const price = model?.model_spec?.pricing?.generation?.usd;
+  const estimate = state.estimate;
   el("model").textContent =
     `${model?.model_spec?.name || current.model} (${current.model}) · 1024 × 1024 · one image · PNG`;
   el("estimate").textContent =
-    price === undefined
-      ? "Estimate unavailable. Refresh before generation."
-      : `Estimate: $${price} USD · Venice catalog fetched ${state.catalog.fetched_at}. Estimate is not a charge or spending cap.`;
+    estimate.usd === undefined
+      ? `Estimate unavailable. ${estimate.unavailable_reason}`
+      : `Estimate: $${estimate.usd} USD · Venice catalog fetched ${estimate.fetched_at}. Estimate is not a charge or spending cap.`;
   el("library-path").textContent = `Library: ${state.library || "unavailable"}`;
   counter();
   generate.disabled =
     Boolean(state.inflight) ||
     dirty ||
+    estimate.usd === undefined ||
     !state.credential_present ||
     Boolean(state.setup_error) ||
     state.attempts.some((a: Attempt) => a.id === current.id);
@@ -124,20 +125,30 @@ function render() {
   ].filter(Boolean);
   if (errors.length) notice(errors.join(" "));
   const list = el("attempts");
-  list.replaceChildren();
+  const buttons = new Map(
+    Array.from(list.children, (node) => {
+      const button = node as HTMLButtonElement;
+      return [button.dataset.attempt, button];
+    }),
+  );
   state.attempts.sort((a: Attempt, b: Attempt) =>
     b.created_at.localeCompare(a.created_at),
   );
-  for (const a of state.attempts as Attempt[]) {
-    const button = document.createElement("button");
+  (state.attempts as Attempt[]).forEach((a, index) => {
+    const button = buttons.get(a.id) || document.createElement("button");
+    buttons.delete(a.id);
+    button.dataset.attempt = a.id;
     button.className = "attempt";
-    button.textContent = `${new Date(a.created_at).toLocaleString()} · ${a.status} · ${a.prompt.slice(0, 70)}`;
+    const label = `${new Date(a.created_at).toLocaleString()} · ${a.status} · ${a.prompt.slice(0, 70)}`;
+    if (button.textContent !== label) button.textContent = label;
     button.onclick = () => {
       selected = a.id;
       show(a);
     };
-    list.append(button);
-  }
+    if (list.children[index] !== button)
+      list.insertBefore(button, list.children[index] || null);
+  });
+  for (const button of buttons.values()) button.remove();
   const shown =
     state.attempts.find((a: Attempt) => a.id === selected) || state.attempts[0];
   if (shown) show(shown);
@@ -170,10 +181,13 @@ function show(a: Attempt) {
     }
   }
   const actions = el("result-actions");
-  actions.replaceChildren();
-  const reuse = document.createElement("button");
-  reuse.className = "secondary";
-  reuse.textContent = "Use recipe as new draft";
+  let reuse = actions.querySelector<HTMLButtonElement>(".reuse");
+  if (!reuse) {
+    reuse = document.createElement("button");
+    reuse.className = "secondary reuse";
+    reuse.textContent = "Use recipe as new draft";
+    actions.append(reuse);
+  }
   reuse.onclick = async () => {
     try {
       await saving;
@@ -189,10 +203,14 @@ function show(a: Attempt) {
       notice(e);
     }
   };
-  actions.append(reuse);
+  let save = actions.querySelector<HTMLButtonElement>(".retry-save");
   if (a.status === "save_failed") {
-    const save = document.createElement("button");
-    save.textContent = "Retry local save";
+    if (!save) {
+      save = document.createElement("button");
+      save.className = "retry-save";
+      save.textContent = "Retry local save";
+      actions.append(save);
+    }
     save.onclick = async () => {
       try {
         await api(`/api/attempts/${a.id}/save`, {});
@@ -201,8 +219,7 @@ function show(a: Attempt) {
         notice(e);
       }
     };
-    actions.append(save);
-  }
+  } else save?.remove();
 }
 async function reload() {
   state = await api("/api/state");
