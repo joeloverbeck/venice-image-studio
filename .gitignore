@@ -19,3 +19,7 @@
 /outputs/
 /logs/
 *.log
+
+# Python integration-check caches
+__pycache__/
+*.pyc

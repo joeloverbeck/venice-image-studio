@@ -1,0 +1,149 @@
+:root {
+  font:
+    16px/1.55 system-ui,
+    sans-serif;
+  color: #25332b;
+  background: #f4f1e9;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+header {
+  padding: 2rem 3rem 1rem;
+  border-bottom: 1px solid #d8dbcf;
+}
+h1 {
+  font:
+    2.4rem Georgia,
+    serif;
+  margin: 0.25rem 0;
+}
+h2 {
+  font:
+    1.5rem Georgia,
+    serif;
+}
+p {
+  margin: 0.5rem 0 1rem;
+}
+.eyebrow {
+  letter-spacing: 0.15em;
+  font-size: 0.75rem;
+}
+main {
+  display: grid;
+  grid-template-columns: minmax(330px, 0.9fr) minmax(400px, 1.1fr);
+  gap: 2rem;
+  padding: 2rem 3rem;
+}
+section {
+  min-width: 0;
+}
+textarea {
+  display: block;
+  width: 100%;
+  resize: vertical;
+  padding: 1rem;
+  font: inherit;
+  color: inherit;
+  background: #fffdf7;
+  border: 1px solid #a3afa1;
+  border-radius: 8px;
+  margin-top: 0.5rem;
+  min-height: 320px;
+}
+button,
+a.download {
+  border: 0;
+  border-radius: 6px;
+  background: #31593d;
+  color: white;
+  padding: 0.7rem 1rem;
+  font: inherit;
+  cursor: pointer;
+  display: inline-block;
+  margin: 0.3rem 0.4rem 0.3rem 0;
+  text-decoration: none;
+}
+button.secondary {
+  background: #e1e6dc;
+  color: #25332b;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+:focus-visible {
+  outline: 3px solid #bf6d24;
+  outline-offset: 3px;
+}
+.options,
+details {
+  padding: 1rem;
+  margin: 1rem 0;
+  background: #ebece3;
+  border-radius: 8px;
+}
+.options p,
+details p,
+#count,
+#draft-status {
+  font-size: 0.88rem;
+}
+#notice {
+  margin: 1rem 3rem;
+  color: #802e1e;
+}
+#images img {
+  display: block;
+  max-width: 100%;
+  max-height: 65vh;
+  object-fit: contain;
+  background: #e4e5de;
+  border-radius: 6px;
+}
+figure {
+  margin: 1rem 0;
+}
+figcaption {
+  font-size: 0.9rem;
+  margin: 0.5rem 0;
+}
+pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 0.8rem;
+}
+.attempt {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: #e1e6dc;
+  color: #25332b;
+}
+.result {
+  position: sticky;
+  top: 1rem;
+  align-self: start;
+}
+summary {
+  cursor: pointer;
+}
+@media (max-width: 850px) {
+  main {
+    grid-template-columns: 1fr;
+    padding: 1.2rem;
+  }
+  header {
+    padding: 1.2rem;
+  }
+  .result {
+    position: static;
+  }
+  #notice {
+    margin: 1rem;
+  }
+}
