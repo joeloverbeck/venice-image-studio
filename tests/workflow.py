@@ -1,6 +1,7 @@
 """Running application checks; only the Venice HTTP boundary is substituted."""
 import base64, struct, zlib, hashlib, http.server, json, os, pathlib, socket, subprocess, tempfile, threading, time, unittest, urllib.request, urllib.error, uuid
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+BINARY = ROOT / 'target/check/debug/venice-image-studio'
 def chunk(kind, data):
     return struct.pack('>I',len(data))+kind+data+struct.pack('>I',zlib.crc32(kind+data))
 PNG = b'\x89PNG\r\n\x1a\n'+chunk(b'IHDR',struct.pack('>IIBBBBB',1,1,8,6,0,0,0))+chunk(b'IDAT',zlib.compress(b'\x00\xff\x00\x00\xff'))+chunk(b'IEND',b'')
@@ -37,6 +38,8 @@ class Provider(http.server.BaseHTTPRequestHandler):
         except BrokenPipeError:pass
 class Workflow(unittest.TestCase):
     def setUp(self):
+        if not BINARY.is_file():
+            raise RuntimeError('Missing isolated test binary. Run ./scripts/check from the repository root first.')
         Provider.requests=[];Provider.delay=0;Provider.status=200;Provider.catalog_status=200;Provider.response_headers={};Provider.raw_body=None;Provider.response={'images':[base64.b64encode(PNG).decode()],'seed':42}
         Provider.pricing={'generation':{'usd':0.02}}
         Provider.catalog=None
@@ -48,7 +51,7 @@ class Workflow(unittest.TestCase):
         self.url=f'http://127.0.0.1:{port()}'
         env={**os.environ,'VENICE_IMAGE_STUDIO_DATA_DIR':str(self.library),'VENICE_API_KEY':'must-never-leave-test-mode',**getattr(self,'extra_env',{})}
         self.log=open(pathlib.Path(self.tmp.name)/'process.log','ab')
-        self.process=subprocess.Popen([str(ROOT/'target/debug/venice-image-studio'),'--port',self.url.rsplit(':',1)[1],'--fixture-provider',f'http://127.0.0.1:{self.provider.server_port}'],cwd=ROOT,env=env,stdout=self.log,stderr=self.log)
+        self.process=subprocess.Popen([str(BINARY),'--port',self.url.rsplit(':',1)[1],'--fixture-provider',f'http://127.0.0.1:{self.provider.server_port}'],cwd=ROOT,env=env,stdout=self.log,stderr=self.log)
         for _ in range(100):
             try:self.state=self.call('/api/state');return
             except (OSError,ValueError):time.sleep(.05)

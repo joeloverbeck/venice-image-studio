@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || 'playwright');
-const browser = await chromium.launch({executablePath: process.env.CHROME_BIN || '/usr/bin/google-chrome', args: ['--no-sandbox']});
+const browser = await chromium.launch({executablePath: process.env.CHROME_BIN || undefined});
 const page = await browser.newPage({viewport: {width: 1440, height: 1000}});
 const errors = [];
 page.on('pageerror', error => errors.push(error.message));
