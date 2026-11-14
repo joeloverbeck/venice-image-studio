@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Venice Image Studio</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <header>
+      <p class="eyebrow">VENICE IMAGE STUDIO</p>
+      <h1>Writing desk</h1>
+      <p>Compose, generate and keep your originals.</p>
+    </header>
+    <div id="notice" role="status" aria-live="polite"></div>
+    <main>
+      <section class="compose">
+        <h2>Your prompt</h2>
+        <label for="prompt">Describe the image</label
+        ><textarea
+          id="prompt"
+          rows="16"
+          placeholder="Write your full prompt…"
+        ></textarea>
+        <p id="count"></p>
+        <p id="draft-status" role="status"></p>
+        <div class="options">
+          <h2>Generation</h2>
+          <p id="model">Chroma · 1024 × 1024 · one image · PNG</p>
+          <label><input id="safe" type="checkbox" /> Safe mode</label>
+          <p>
+            Enhancement off. Seed omitted: Venice documents random selection,
+            but its generic schema defaults to zero. Actual seed is unknown
+            until returned; repeatability is not guaranteed.
+          </p>
+          <p id="estimate"></p>
+          <button id="refresh" class="secondary">Refresh catalog</button
+          ><button id="generate">Generate one image</button>
+        </div>
+        <details>
+          <summary>Local retention and privacy</summary>
+          <p id="library-path"></p>
+          <p>
+            Prompts, recipes and originals are kept locally with private
+            permissions, without encryption. Provider privacy claims do not
+            delete your local library. Downloads preserve the original, which
+            may already include provider metadata. Recipes and diagnostics are
+            separate.
+          </p>
+        </details>
+        <h2>Saved attempts</h2>
+        <div id="attempts"></div>
+      </section>
+      <section class="result">
+        <h2>Result</h2>
+        <p id="result-status">Your result will appear here.</p>
+        <div id="images"></div>
+        <div id="result-actions"></div>
+        <details>
+          <summary>Recipe and provider details</summary>
+          <pre id="recipe">Choose an attempt to inspect its recipe.</pre>
+        </details>
+      </section>
+    </main>
+  </body>
+</html>
