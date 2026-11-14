@@ -394,6 +394,27 @@ class Workflow(unittest.TestCase):
         self.assertEqual(self.library.stat().st_mode&0o777,0o700)
         self.assertEqual((self.library/(a['id']+'.recipe.json')).stat().st_mode&0o777,0o600)
 
+    def test_flagged_original_explained_and_legacy_recipe_read_without_rewrite(self):
+        Provider.response_headers={'x-venice-is-blurred':'true','x-venice-is-content-violation':'true'}
+        d=self.draft();a=self.finish(self.call('/api/generate',{'draft_id':d['id']})['id'])
+        self.assertEqual(a['status'],'saved')
+        self.assertEqual(a['outcome'],'flagged')
+        for word in ['response-wide','blur','violation','reason','unknown','saved']:
+            self.assertIn(word,a['summary'].lower())
+        self.assertEqual(self.call('/api/images/'+a['results'][0]['id'],raw=True),PNG)
+        self.stop()
+        path=self.library/(a['id']+'.recipe.json')
+        legacy=json.loads(path.read_bytes())
+        legacy.update(outcome='received',outcome_summary='Received originals; saving locally.',summary='Originals and recipe saved locally.')
+        path.write_text(json.dumps(legacy));before=path.read_bytes()
+        self.start();reopened=self.call('/api/attempts/'+a['id'])
+        self.assertEqual(reopened['outcome'],'flagged')
+        for word in ['response-wide','blur','violation','reason','unknown','saved']:
+            self.assertIn(word,reopened['summary'].lower())
+        self.assertEqual(path.read_bytes(),before)
+        self.assertEqual(self.call('/api/images/'+a['results'][0]['id'],raw=True),PNG)
+        self.assertEqual(len(Provider.requests),1)
+
     def test_response_flags_partial_images_and_stale_catalog_remain_inspectable(self):
         Provider.response={'images':[base64.b64encode(PNG).decode(),'not base64',base64.b64encode(PNG).decode()], 'content_policy_violation_count':1,'suggested_prompt':'<script>untrusted</script>'}
         Provider.response_headers={'x-venice-is-blurred':'true','x-venice-is-content-violation':'true','x-venice-content-violation-count':'1','x-venice-enhanced-prompt':'unexpected%20revision'}
