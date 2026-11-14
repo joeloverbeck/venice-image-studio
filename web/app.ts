@@ -140,11 +140,37 @@ function render() {
       : null,
   ].filter(Boolean);
   if (errors.length) notice(errors.join(" "));
+  renderActivity();
   void refreshLibrary(selected);
   const shown =
     state.attempts.find((a: Attempt) => a.id === selected) ||
     [...state.attempts].sort((a: Attempt, b: Attempt) => b.created_at.localeCompare(a.created_at))[0];
   if (shown) show(shown);
+}
+function renderActivity() {
+  const attempts = [...state.attempts].sort((a: Attempt, b: Attempt) => b.created_at.localeCompare(a.created_at));
+  const active = attempts.filter((a: Attempt, index: number) => index === 0 || a.status === "save_failed" || a.id === state.inflight);
+  for (const id of ["activity", "inspector-activity", "model-activity"]) {
+    const panel = el(id);
+    const key = JSON.stringify(active.map((a: Attempt) => [a.id, a.status, a.summary]));
+    if (panel.dataset.content === key) continue;
+    const focusedAttempt = panel.contains(document.activeElement) ? (document.activeElement as HTMLElement)?.dataset.viewAttempt : null;
+    panel.dataset.content = key;
+    panel.replaceChildren();
+    for (const a of active) {
+      const line = text("div", "");
+      line.append(text("span", `${a === attempts[0] ? "Latest attempt" : "Unfinished saving"} · ${a.status}: ${a.summary}`));
+      const view = document.createElement("button");
+      view.dataset.viewAttempt = a.id;
+      view.className = "secondary"; view.textContent = "View attempt";
+      view.onclick = () => {
+        for (const dialog of Array.from(document.querySelectorAll<HTMLDialogElement>("dialog[open]"))) dialog.close();
+        show(a); void refreshLibrary(a.id); el("result-status").focus();
+      };
+      line.append(view); panel.append(line);
+    }
+    if (focusedAttempt) panel.querySelector<HTMLElement>(`[data-view-attempt="${focusedAttempt}"]`)?.focus();
+  }
 }
 const inspectOriginal = originalInspector(notice);
 const refreshLibrary = libraryView(api, id => {
@@ -241,8 +267,10 @@ function show(a: Attempt) {
     }
     save.onclick = async () => {
       try {
+        const hadFocus = document.activeElement === save;
         await api(`/api/attempts/${a.id}/save`, {});
         await reload();
+        if (hadFocus && !save?.isConnected) el("result-status").focus();
       } catch (e) {
         notice(e);
       }
@@ -303,7 +331,7 @@ function renderBrowser() {
   for (const m of matching) {
     const row = document.createElement("button"); row.className = "model-row secondary";
     row.append(text("strong", m.name), text("span", m.id), text("span", `${m.availability} · ${m.prompt_limit ?? "unknown"} characters · ${m.contract.sizing} · ${m.price_summary || "price in detail"}`), text("span", `${claimLabels[m.claims.privacy.state]} · uncensored: ${claimLabels[m.claims.uncensored.state]}`));
-    row.onclick = () => { inspecting = m.id; renderModelDetail(); }; list.append(row);
+    row.onclick = () => { inspecting = m.id; renderModelDetail(); el("model-detail").focus(); }; list.append(row);
   }
   if (!inspecting) inspecting = current.model;
   renderModelDetail();
@@ -344,7 +372,9 @@ function renderSettings(force = false) {
   if (status) status.textContent = stylesStatus;
   if (!force && controlsKey === key) return;
   controlsKey = key;
-  const container = el("settings"); const advancedOpen = container.querySelector("details")?.open || false; container.replaceChildren();
+  const container = el("settings");
+  const focusedId = container.contains(document.activeElement) ? document.activeElement?.id : null;
+  const advancedOpen = container.querySelector("details")?.open || false; container.replaceChildren();
   if (!c) return;
   const settings = current.settings;
   const basic = document.createElement("div"); basic.className = "settings-grid";
@@ -381,7 +411,7 @@ function renderSettings(force = false) {
     control("width", "Width in pixels", undefined, { min: 1, max: c.pixel_max }); control("height", "Height in pixels", undefined, { min: 1, max: c.pixel_max });
     basic.append(text("p", `Use multiples of ${c.divisor || "unknown"}; maximum ${c.pixel_max} per side. Actual returned pixels may differ.`));
     const presets = document.createElement("div");
-    for (const preset of c.pixel_presets || []) { const button = document.createElement("button"); button.className = "secondary"; button.textContent = preset.label; button.onclick = () => { settings.width = preset.width; settings.height = preset.height; edited(); renderSettings(true) }; presets.append(button) }
+    for (const preset of c.pixel_presets || []) { const button = document.createElement("button"); button.id = `preset-${preset.width}-${preset.height}`; button.className = "secondary"; button.textContent = preset.label; button.onclick = () => { settings.width = preset.width; settings.height = preset.height; edited(); renderSettings(true) }; presets.append(button) }
     basic.append(presets);
   } else if (c.sizing === "ratio") {
     control("aspect_ratio", "Aspect ratio", c.aspect_ratios);
@@ -401,6 +431,7 @@ function renderSettings(force = false) {
   for (const limitation of c.limitations || []) advanced.append(text("p", limitation));
   const styleStatus = text("p", stylesStatus); styleStatus.id = "styles-status"; advanced.append(styleStatus);
   container.append(basic, advanced);
+  if (focusedId) document.getElementById(focusedId)?.focus();
 }
 el("browse-models").onclick = () => { renderBrowser(); browser.showModal(); };
 el("close-models").onclick = () => browser.close();

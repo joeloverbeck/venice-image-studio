@@ -3,17 +3,18 @@
 A local image studio for Venice AI: Rust application logic, a thin
 TypeScript browser interface, and a permanent image library outside the checkout.
 
-**Status: all-model browsing and generation-controls candidate.**
+**Status: complete-workflow candidate awaiting final owner evaluation.**
 The Writing desk supports the current catalog, dated model guidance, validated
-model-specific controls, and saving/reopening original images and recipes.
-The first Chroma provider checkpoint is recorded in [issue #2](https://github.com/joeloverbeck/venice-image-studio/issues/2).
-[Issue #3](https://github.com/joeloverbeck/venice-image-studio/issues/3) owns the
-current model-choice increment; its Grok checkpoint and owner evaluation remain
-pending. Offline checks establish client behavior, not model quality, effective
-seeds, provider guarantees or owner usability. [Issue #1](https://github.com/joeloverbeck/venice-image-studio/issues/1)
-owns the complete delivery and acceptance boundary.
+model-specific controls, original inspection, failure recovery, and a searchable
+saved library with recipe reuse. Real Chroma and Grok checkpoints are recorded in
+[issue #2](https://github.com/joeloverbeck/venice-image-studio/issues/2) and
+[issue #3](https://github.com/joeloverbeck/venice-image-studio/issues/3).
+Offline checks establish client mechanics, not model quality, effective seeds,
+provider guarantees or comfortable recurrent use. [Issue #1](https://github.com/joeloverbeck/venice-image-studio/issues/1)
+owns the complete delivery and acceptance boundary; the final joined evaluation
+is tracked in [issue #6](https://github.com/joeloverbeck/venice-image-studio/issues/6).
 
-The first usable version will support long prompts within each model's limits,
+The candidate supports long prompts within each model's advertised limits,
 informed model selection, appropriate sizing and seed controls, image inspection,
 downloads, and automatic saving of every result with its recipe. Safe mode starts
 off; optional prompt enhancement stays off. Refusals, partial results, privacy
@@ -51,7 +52,11 @@ The application license does not determine provider terms or generated-image rig
 
 ## Run locally
 
-Requires Ubuntu, Rust/Cargo (edition 2024; checked with 1.97.1), Node.js 24 and npm.
+Requires Ubuntu, Rust/Cargo (edition 2024; checked with 1.97.1), a C compiler/linker,
+Node.js 24, npm and a current desktop browser. The first build downloads pinned
+dependencies; generation and catalog refresh need access to Venice. Clone the
+repository and run the following from its root. No sibling checkout or separate
+frontend server is required.
 From a clean checkout, set `VENICE_API_KEY` in the process environment or create
 an owner-readable repo-local `.env` from `.env.example` (`chmod 600 .env`). Existing
 process variables take precedence. The app never overwrites this file. A missing
@@ -62,10 +67,42 @@ disabled. An invalid key produces a redacted access error after Venice responds.
 ./scripts/start
 ```
 
-This installs pinned frontend dependencies, builds the browser assets and Rust
-binary, then runs one process. Open **http://127.0.0.1:4318**. Subsequent launches
-can run `./target/debug/venice-image-studio` directly; rerun the script after code
-changes. `--port 4319` selects another loopback port. Use the printed IPv4 address.
+This installs pinned frontend dependencies, builds the browser assets and an
+ordinary Rust binary, then runs one process. Open **http://127.0.0.1:4318**. Use
+the same command when returning or after updating the checkout. If the port is
+occupied, `./scripts/start --port 4319` selects another loopback port; use the
+printed IPv4 address. A second process cannot open the same library concurrently.
+After a successful build, `./target/debug/venice-image-studio` is an optional
+shortcut until the code changes.
+
+The **Prompt**, **Result** and **Library** links move keyboard focus directly to
+that part of the desk, including in narrow windows. Tab/Shift+Tab reach controls,
+Enter activates buttons and links, Space toggles checkboxes, and Escape closes a
+model or image dialog and returns focus. Selecting a model row moves focus to its
+details. The latest attempt and unfinished saving remain visible in both dialogs;
+**View attempt** returns to its result without generating or changing the draft.
+
+To stop, wait for **Draft saved locally** and for received originals to show saved,
+then press Ctrl+C in the launch terminal. Closing a browser tab leaves the Rust
+process running. Stopping during dispatch can leave an indeterminate attempt;
+stopping during a save failure can lose bytes held only in memory. The next launch
+reopens saved history and the draft without resubmitting anything.
+
+To return from a separate checkout, stop the previous Studio process, set
+`VENICE_IMAGE_STUDIO_DATA_DIR` to the same absolute external library, and run
+`./scripts/start` there. For example:
+
+```sh
+VENICE_IMAGE_STUDIO_DATA_DIR="$HOME/Pictures/Venice Image Studio" ./scripts/start
+```
+
+The new checkout needs its own private key configuration only for new generation;
+it can reopen, inspect and download existing work without a key. Use **Library**
+to search, open an attempt, inspect/download the original, or explicitly export
+its recipe. **Use recipe as new draft** replaces the editable draft with a copy
+of the old choices, preserves the historical record, and does not submit a request.
+Before reusing a recipe, finish any current draft you want to keep separately.
+The library is never copied into the checkout and is not removed by Git updates.
 
 Browse and compare every current generation model by name, ID and dated practical
 guidance, with separate filters for uncensored positioning, Venice privacy,
@@ -167,10 +204,14 @@ python3 tests/workflow.py
 python3 tests/library_workflow.py
 ```
 
-The library browser check additionally needs Playwright and Chrome. With them
-installed, run `python3 tests/library_browser.py`; `PLAYWRIGHT_MODULE` may name an
+Browser checks additionally need Playwright and Chrome. With them installed, run
+`python3 tests/library_browser.py` and `python3 tests/studio_browser.py`;
+`PLAYWRIGHT_MODULE` may name an
 absolute Playwright `index.mjs`, and `CHROME_BIN` overrides `/usr/bin/google-chrome`.
-It uses only synthetic results in the same disposable external-library seam.
+They use only synthetic results in the same disposable external-library seam.
+The joined desk check covers keyboard focus, long-draft reload, variant estimates,
+waiting/saving status during navigation, local save recovery, 390-pixel-wide
+layout and 4096-pixel original inspection. It does not replace owner evaluation.
 
 The checks also require a C compiler for the synthetic filesystem-space fault.
 The high-seam checks start the actual Rust server with a controlled loopback HTTP

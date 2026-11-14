@@ -13,7 +13,11 @@
       <h1>Writing desk</h1>
       <p>Compose, generate and keep your originals.</p>
     </header>
+    <nav class="workspace-nav" aria-label="Writing desk">
+      <a href="#prompt">Prompt</a><a href="#result-status">Result</a><a href="#library-search">Library</a>
+    </nav>
     <div id="notice" role="status" aria-live="polite"></div>
+    <aside id="activity" class="activity" aria-label="Latest attempt and saving" aria-live="polite"></aside>
     <main>
       <section class="compose">
         <h2>Your prompt</h2>
@@ -63,7 +67,7 @@
       <section class="result">
         <h2>Result</h2>
         <p id="requested"></p>
-        <p id="result-status">Your result will appear here.</p>
+        <p id="result-status" tabindex="-1" role="status">Your result will appear here.</p>
         <div id="images"></div>
         <div id="result-actions"></div>
         <details>
@@ -76,6 +80,7 @@
       <div id="inspector-surface">
       <div class="dialog-header"><h2 id="inspector-title">Original image</h2><button id="close-inspector" class="secondary">Close inspector</button></div>
       <p id="inspector-metadata"></p>
+      <aside id="inspector-activity" class="activity" aria-label="Latest attempt and saving" aria-live="polite"></aside>
       <div class="inspector-toolbar">
         <button id="inspector-fit" class="secondary">Fit to view</button><button id="inspector-actual" class="secondary">100%</button>
         <button id="inspector-out" class="secondary" aria-label="Zoom out">−</button><output id="inspector-zoom" aria-live="polite"></output><button id="inspector-in" class="secondary" aria-label="Zoom in">+</button>
@@ -89,6 +94,7 @@
     <dialog id="model-browser" aria-labelledby="browser-title">
       <div class="dialog-header"><h2 id="browser-title">Choose a model</h2><button id="close-models" class="secondary">Close</button></div>
       <p>Vendor claims and dated guidance are attributed. No model-wide benchmark or guaranteed acceptance is implied.</p>
+      <aside id="model-activity" class="activity" aria-label="Latest attempt and saving" aria-live="polite"></aside>
       <label for="model-search">Search names, IDs and practical guidance</label>
       <input id="model-search" type="search" placeholder="Photography, anime, typography, model ID…" />
       <div class="filters">
@@ -98,7 +104,7 @@
         <label>Additional protection<select id="filter-additional_protection" aria-label="Additional protection"><option value="">All</option><option value="unknown">Unknown / not established for images</option></select></label>
       </div>
       <p id="catalog-age"></p><p id="model-results-count" role="status"></p>
-      <div class="model-browser-body"><div id="model-list"></div><article id="model-detail" aria-live="polite"></article></div>
+      <div class="model-browser-body"><div id="model-list"></div><article id="model-detail" tabindex="-1" aria-label="Model details"></article></div>
     </dialog>
   </body>
 </html>
