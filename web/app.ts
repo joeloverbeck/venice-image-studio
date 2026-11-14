@@ -1,4 +1,5 @@
-export { };
+import { libraryView } from "./library";
+import { originalInspector } from "./inspector";
 type Draft = {
   id: string;
   prompt: string;
@@ -135,35 +136,17 @@ function render() {
       : null,
   ].filter(Boolean);
   if (errors.length) notice(errors.join(" "));
-  const list = el("attempts");
-  const buttons = new Map(
-    Array.from(list.children, (node) => {
-      const button = node as HTMLButtonElement;
-      return [button.dataset.attempt, button];
-    }),
-  );
-  state.attempts.sort((a: Attempt, b: Attempt) =>
-    b.created_at.localeCompare(a.created_at),
-  );
-  (state.attempts as Attempt[]).forEach((a, index) => {
-    const button = buttons.get(a.id) || document.createElement("button");
-    buttons.delete(a.id);
-    button.dataset.attempt = a.id;
-    button.className = "attempt";
-    const label = `${new Date(a.created_at).toLocaleString()} · ${a.status} · ${a.prompt.slice(0, 70)}`;
-    if (button.textContent !== label) button.textContent = label;
-    button.onclick = () => {
-      selected = a.id;
-      show(a);
-    };
-    if (list.children[index] !== button)
-      list.insertBefore(button, list.children[index] || null);
-  });
-  for (const button of buttons.values()) button.remove();
+  void refreshLibrary(selected);
   const shown =
-    state.attempts.find((a: Attempt) => a.id === selected) || state.attempts[0];
+    state.attempts.find((a: Attempt) => a.id === selected) ||
+    [...state.attempts].sort((a: Attempt, b: Attempt) => b.created_at.localeCompare(a.created_at))[0];
   if (shown) show(shown);
 }
+const inspectOriginal = originalInspector(notice);
+const refreshLibrary = libraryView(api, id => {
+  const attempt = state.attempts.find((a: Attempt) => a.id === id);
+  if (attempt) show(attempt);
+}, notice);
 function show(a: Attempt) {
   selected = a.id;
   el("requested").textContent = `Requested: ${a.request.model} · ${a.request.width ? `${a.request.width} × ${a.request.height} pixels` : `${a.request.aspect_ratio} · ${a.request.resolution || "model-native resolution"}`} · ${a.request.quality || "model-native quality"} · ${a.request.format}. Actual result dimensions appear below.`;
@@ -189,11 +172,22 @@ function show(a: Attempt) {
       download.download = `${r.id}.${r.mime.split("/")[1]}`;
       download.className = "download";
       download.textContent = "Download original";
-      figure.append(image, caption, download);
+      const inspect = document.createElement("button");
+      inspect.className = "secondary"; inspect.textContent = "Inspect original";
+      inspect.onclick = () => inspectOriginal(r, a.prompt, a.request);
+      image.loading = "lazy"; image.decoding = "async";
+      image.alt = "Original shown scaled to fit; choose Inspect original for detail";
+      figure.append(image, caption, inspect, download);
       images.append(figure);
     }
   }
   const actions = el("result-actions");
+  let exportRecipe = actions.querySelector<HTMLAnchorElement>(".export-recipe");
+  if (!exportRecipe) {
+    exportRecipe = document.createElement("a"); exportRecipe.className = "download export-recipe";
+    exportRecipe.textContent = "Export recipe JSON"; actions.append(exportRecipe);
+  }
+  exportRecipe.href = `/api/attempts/${a.id}/recipe`; exportRecipe.download = `${a.id}.recipe.json`;
   let reuse = actions.querySelector<HTMLButtonElement>(".reuse");
   if (!reuse) {
     reuse = document.createElement("button");
@@ -204,10 +198,11 @@ function show(a: Attempt) {
   reuse.onclick = async () => {
     try {
       await saving;
-      current = await api(`/api/attempts/${a.id}/reuse`, {});
+      await api(`/api/attempts/${a.id}/reuse`, {});
+      state = await api("/api/state");
+      current = structuredClone(state.draft);
       prompt.value = current.prompt;
       safe.checked = current.safe_mode;
-      state = await api("/api/state");
       controlsKey = "";
       dirty = false;
       el("draft-status").textContent =

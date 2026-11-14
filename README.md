@@ -117,6 +117,21 @@ without changing the previous recipe or making a paid request. Original download
 preserve provider bytes, which may already contain provider metadata; the recipe
 and diagnostics remain separate in the app and external library.
 
+Search the Library by prompt text, model name or exact model ID, and choose newest
+or oldest date order. It includes failed, partial and flagged attempts alongside
+saved originals. Opening a record leaves the current draft intact. **Inspect
+original** opens fit-to-view, 100%, pan/zoom and fullscreen controls; use drag or
+the arrow keys to pan, scroll or +/− to zoom, 0 to fit and 1 for 100%. The Writing
+desk shows scaled originals; these are not separate thumbnail files. The inspector
+reports actual dimensions and detected format, which may differ from the request.
+Prompt/settings remain reachable beneath the image. **Export recipe JSON** is an
+explicit private download containing the authored prompt, supported submitted
+settings, model/control evidence, seeds, estimate and original identities. It
+excludes provider diagnostic captures and explanations; those remain in local
+attempt details. Exporting never generates or changes the saved record. Reuse
+retains a removed model's identity and explains unavailable dispatch; historical
+settings this version cannot represent prevent reuse instead of being discarded.
+
 Local resource policy: request bodies 256 KiB, catalog 4 MiB, provider response
 192 MiB, each original 96 MiB, decoded dimensions at most 8192×8192 with a 256 MiB
 decoder allocation limit, and generation timeout five minutes. Diagnostic captures
@@ -134,7 +149,13 @@ cargo fmt --check
 cargo clippy --locked --all-features -- -D warnings
 cargo build --locked --features test-support
 python3 tests/workflow.py
+python3 tests/library_workflow.py
 ```
+
+The library browser check additionally needs Playwright and Chrome. With them
+installed, run `python3 tests/library_browser.py`; `PLAYWRIGHT_MODULE` may name an
+absolute Playwright `index.mjs`, and `CHROME_BIN` overrides `/usr/bin/google-chrome`.
+It uses only synthetic results in the same disposable external-library seam.
 
 The high-seam checks start the actual Rust server with a controlled loopback HTTP
 provider and a temporary external library under `/var/tmp`. They cover exact long

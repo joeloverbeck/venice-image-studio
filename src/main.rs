@@ -1,6 +1,7 @@
 mod library;
 mod models;
 mod provider;
+mod saved_work;
 use axum::{
     Json, Router,
     body::Body,
@@ -239,10 +240,12 @@ async fn run() -> Result<(), String> {
         .route("/app.js", get(js))
         .route("/style.css", get(css))
         .route("/api/state", get(state))
+        .route("/api/library", get(saved_work::search))
         .route("/api/draft", put(draft))
         .route("/api/catalog/refresh", post(refresh_route))
         .route("/api/generate", post(generate))
         .route("/api/attempts/{id}", get(attempt))
+        .route("/api/attempts/{id}/recipe", get(saved_work::export_recipe))
         .route("/api/attempts/{id}/reuse", post(reuse))
         .route("/api/attempts/{id}/save", post(retry_save))
         .route("/api/images/{id}", get(original))
