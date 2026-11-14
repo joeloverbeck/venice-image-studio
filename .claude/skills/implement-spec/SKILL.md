@@ -37,6 +37,14 @@ Communication to and from subagents should be sparse. Communicate primarily thro
 
 7. Once all tickets are complete, call the Skill tool with `code-review` on the integration branch. Fix all issues raised by the code review in a single fresh **implementer subagent**.
 
-8. If a draft PR exists, mark it ready for review. Otherwise, resolve each ticket the way the issue tracker closes work, and report the integration branch.
+8. Reconcile the parent spec and every child ticket against implemented behavior, verification and required owner acceptance. Resolve work using the issue tracker's conventions; PR readiness alone does not establish whole-spec completion. If a draft PR exists and its requirements are satisfied, mark it ready for review. Carry already authorized publication through merge and local synchronization, verifying the resulting revision and checkout state. Request only genuinely missing authority, after preparing the concrete reviewed result.
 
 9. Clean up all **implementer subagent** worktrees.
+
+10. End with a self-contained closeout: name the parent spec and child-ticket status, what was implemented and verified, any remaining acceptance or limitations, the PR/branch and publication state, and exactly what remains and who acts next. State explicitly whether the whole requested spec is complete and whether any agent work is still running. If nothing remains, say so.
+
+## Progress and waits
+
+At acceptance-bearing milestones, report whole-spec progress as well as the current ticket, linking the tracker evidence. Keep the current status in the existing parent issue; the user should not need to reconstruct child comments.
+
+Before yielding for a human action or external dependency, state that work is waiting, the exact remaining action and its owner, why existing authority or evidence cannot resolve it, and the safe resume point. Distinguish active background work from a stopped turn. When the response arrives, resume the authorized work without asking for the same permission again.

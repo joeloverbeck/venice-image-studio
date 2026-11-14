@@ -1,4 +1,4 @@
-"""Browser check of the same running app; set PLAYWRIGHT_MODULE if not installed locally."""
+"""Browser check of the same running app; prepare dependencies with scripts/check."""
 import base64
 import json
 import os

@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+browser_args=()
+case "${1:-}" in
+  '') ;;
+  --with-browser-deps) browser_args+=(--with-deps) ;;
+  *) echo 'Usage: ./scripts/check [--with-browser-deps]' >&2; exit 2 ;;
+esac
+if (( $# > 1 )); then
+  echo 'Usage: ./scripts/check [--with-browser-deps]' >&2
+  exit 2
+fi
+
+# Keep fixture-enabled builds away from the ordinary scripts/start executable.
+export CARGO_TARGET_DIR="$PWD/target/check"
+export PLAYWRIGHT_BROWSERS_PATH="$CARGO_TARGET_DIR/browsers"
+# The canonical run always uses the locked dependency and its matching browser.
+unset PLAYWRIGHT_MODULE CHROME_BIN
+
+npm ci --ignore-scripts
+./node_modules/.bin/playwright install "${browser_args[@]}" chromium
+npm run build
+cargo fmt --check
+cargo clippy --locked --all-features -- -D warnings
+cargo build --locked --features test-support
+python3 tests/workflow.py
+python3 tests/library_workflow.py
+python3 tests/library_browser.py
+python3 tests/studio_browser.py
+echo 'All Studio checks passed (synthetic provider only).'

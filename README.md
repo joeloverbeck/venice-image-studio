@@ -200,19 +200,32 @@ bounded rather than universally verified.
 ## Check without credentials or paid calls
 
 ```sh
-npm ci --ignore-scripts
-npm run build
-cargo fmt --check
-cargo clippy --locked --all-features -- -D warnings
-cargo build --locked --features test-support
-python3 tests/workflow.py
-python3 tests/library_workflow.py
+./scripts/check
 ```
 
-Browser checks additionally need Playwright and Chrome. With them installed, run
-`python3 tests/library_browser.py` and `python3 tests/studio_browser.py`;
-`PLAYWRIGHT_MODULE` may name an
-absolute Playwright `index.mjs`, and `CHROME_BIN` overrides `/usr/bin/google-chrome`.
+This is the same command run by [PR and main CI](.github/workflows/check.yml).
+It installs locked npm dependencies and Playwright's matching Chromium, builds
+browser assets before Rust embeds them, checks formatting/types/Clippy, and runs
+all API and browser suites. Rust and its components are pinned in
+`rust-toolchain.toml`; install through rustup. Setup downloads require network
+access, but the tests use only a synthetic loopback provider and disposable data.
+
+On a fresh Ubuntu installation, use `./scripts/check --with-browser-deps` to also
+install Chromium's system packages (may require sudo). CI uses this option.
+The command fails on the first unsuccessful step; a browser setup failure does
+not skip browser tests or count as a passing check.
+
+Test builds and downloaded browsers live under ignored `target/check/`, separate
+from the ordinary `target/debug/venice-image-studio` executable. After the full
+command, individual suites can be rerun with `python3 tests/workflow.py`,
+`python3 tests/library_workflow.py`, `python3 tests/library_browser.py`, or
+`python3 tests/studio_browser.py`. For browser reruns set
+`PLAYWRIGHT_BROWSERS_PATH="$PWD/target/check/browsers"` in the environment.
+For explicit diagnostic overrides only, `PLAYWRIGHT_MODULE` names an alternate
+module and `CHROME_BIN` an alternate browser; the canonical check command clears
+these overrides to use the locked pair. Rerun the full command after source edits
+so the executable includes the current browser assets.
+
 They use only synthetic results in the same disposable external-library seam.
 The joined desk check covers keyboard focus, long-draft reload, variant estimates,
 waiting/saving status during navigation, local save recovery, 390-pixel-wide
@@ -229,7 +242,8 @@ partial/corrupt/interrupted images, low-space/permission failures, redirects, se
 Host/Origin/token/path boundaries. Fixtures are synthetic and not quality evidence.
 The `test-support` feature enables `--fixture-provider` for loopback only, ignores
 `.env` and process credentials, and sends a fixed synthetic credential. Ordinary
-builds reject that option. Rebuild with `cargo build --locked` before ordinary use.
+builds reject that option. Checks leave the ordinary executable untouched;
+`./scripts/start` remains the ordinary build-and-launch path.
 Browser checks of the same running path are recorded in the active issue.
 
 Runtime source basis: public catalog refreshed 2026-11-14,
