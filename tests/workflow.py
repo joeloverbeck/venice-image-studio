@@ -495,6 +495,24 @@ class Workflow(unittest.TestCase):
         self.assertIsNotNone(refreshed['catalog_error']);self.assertEqual(refreshed['catalog'],previous)
         self.assertEqual(len(Provider.requests),1)
 
+    def test_nonempty_explanation_shapes_are_retained_without_claiming_absence(self):
+        cases=[
+            (400, 'Synthetic JSON string explanation'),
+            (400, {'details':{'_errors':[], 'image':{'_errors':['Invalid image field']}, 'images':{'_errors':['Invalid count']}}}),
+            (422, {'issues':[{'path':['width'],'message':'Invalid dimension'}]}),
+        ]
+        for status,body in cases:
+            with self.subTest(body=body):
+                Provider.status=status;Provider.response=body
+                d=self.draft();a=self.finish(self.call('/api/generate',{'draft_id':d['id']})['id'])
+                self.assertEqual(a['provider']['body'],body)
+                self.assertNotIn('No specific reason',a['summary'])
+        Provider.raw_body=b'Synthetic plain-text explanation';Provider.status=502
+        d=self.draft();a=self.finish(self.call('/api/generate',{'draft_id':d['id']})['id'])
+        self.assertEqual(a['provider']['body']['raw_text'],'Synthetic plain-text explanation')
+        self.assertNotIn('No specific reason',a['summary'])
+        self.assertEqual(len(Provider.requests),4)
+
     def test_bounded_unknown_and_plain_text_evidence_preserves_flags_and_unknowns(self):
         for payload in [b'Plain synthetic provider error <script>not code</script>', b'["unknown", {"shape": true}]']:
             Provider.status=502;Provider.raw_body=payload

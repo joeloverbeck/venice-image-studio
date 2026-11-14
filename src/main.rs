@@ -597,9 +597,17 @@ async fn dispatch(app: App, id: Uuid) {
             a.summary = e;
         }
         Ok((status, body, headers)) => {
+            let mut metadata = body.clone();
+            if let Some(object) = metadata.as_object_mut() {
+                // The native payload is top-level. Nested image/images keys can
+                // name validation fields and must remain inspectable.
+                if object.get("images").is_some_and(Value::is_array) {
+                    object.remove("images");
+                }
+            }
             let details = app
                 .provider
-                .redact(&json!({"http_status":status,"body":body,"headers":headers}));
+                .redact(&json!({"http_status":status,"body":metadata,"headers":headers}));
             let encoded = serde_json::to_string(&details).unwrap();
             a.provider = if encoded.len() > 32768 {
                 json!({"http_status":status,"headers":details["headers"],"capture_truncated":true,"body":{"capture_truncated":true,"text":serde_json::to_string(&details["body"]).unwrap().chars().take(16000).collect::<String>()}})

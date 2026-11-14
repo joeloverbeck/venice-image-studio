@@ -193,10 +193,14 @@ pub fn interpret(
 }
 
 pub fn has_explanation(body: &Value) -> bool {
+    if body.as_str().is_some_and(|s| !s.trim().is_empty()) {
+        return true;
+    }
     [
         "/reason",
         "/error",
         "/message",
+        "/raw_text",
         "/error/message",
         "/error/reason",
     ]
@@ -205,5 +209,16 @@ pub fn has_explanation(body: &Value) -> bool {
         body.pointer(pointer)
             .and_then(Value::as_str)
             .is_some_and(|s| !s.trim().is_empty())
-    })
+    }) || ["/details", "/issues", "/error/details", "/error/issues"]
+        .iter()
+        .any(|pointer| body.pointer(pointer).is_some_and(nonempty_detail))
+}
+fn nonempty_detail(value: &Value) -> bool {
+    match value {
+        Value::Null => false,
+        Value::String(s) => !s.trim().is_empty(),
+        Value::Array(values) => values.iter().any(nonempty_detail),
+        Value::Object(fields) => fields.values().any(nonempty_detail),
+        _ => true,
+    }
 }

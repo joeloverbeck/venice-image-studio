@@ -214,7 +214,6 @@ impl Provider {
             }
             Value::Object(o) => Value::Object(
                 o.iter()
-                    .filter(|(k, _)| !matches!(k.as_str(), "images" | "image" | "b64_json"))
                     .map(|(k, v)| {
                         (
                             self.redact(&Value::String(k.clone()))
