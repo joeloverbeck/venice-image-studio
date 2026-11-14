@@ -386,6 +386,7 @@ function renderSettings(force = false) {
   const settings = current.settings;
   const basic = document.createElement("div"); basic.className = "settings-grid";
   const advanced = document.createElement("details"); advanced.open = advancedOpen; advanced.append(text("summary", "Advanced controls"));
+  let updatePixelChoices = () => {};
   function control(key: string, title: string, choices?: string[], options: { advanced?: boolean, type?: string, supported?: boolean, min?: number, max?: number } = {}) {
     const supported = options.supported !== false;
     const label = document.createElement("label"); label.textContent = title;
@@ -406,6 +407,7 @@ function renderSettings(force = false) {
     const changed = () => {
       settings[key] = input instanceof HTMLInputElement && input.type === "checkbox" ? input.checked : input.value === "" ? null : input instanceof HTMLInputElement && input.type === "number" ? Number(input.value) : input.value;
       edited();
+      if (key === "width" || key === "height") updatePixelChoices();
     };
     if (input instanceof HTMLInputElement && input.type !== "checkbox") input.oninput = changed;
     else input.onchange = changed;
@@ -420,8 +422,56 @@ function renderSettings(force = false) {
     control("width", "Width in pixels", undefined, { min: 1, max: c.pixel_max }); control("height", "Height in pixels", undefined, { min: 1, max: c.pixel_max });
     basic.append(text("p", `Use multiples of ${c.divisor || "unknown"}; maximum ${c.pixel_max} per side. Actual returned pixels may differ.`));
     const presets = document.createElement("div");
-    for (const preset of c.pixel_presets || []) { const button = document.createElement("button"); button.id = `preset-${preset.width}-${preset.height}`; button.className = "secondary"; button.textContent = preset.label; button.onclick = () => { settings.width = preset.width; settings.height = preset.height; edited(); renderSettings(true) }; presets.append(button) }
+    type PixelSize = { width: number, height: number };
+    const dimensions = (size: PixelSize) => `${size.width} × ${size.height}`;
+    const identity = (size: PixelSize) => `${size.width}x${size.height}`;
+    const longEdge = (size: PixelSize) => Math.max(size.width, size.height);
+    const applySize = (size: PixelSize) => { settings.width = size.width; settings.height = size.height; edited(); renderSettings(true) };
+    for (const preset of c.pixel_presets || []) {
+      const button = document.createElement("button"); button.id = `preset-${preset.width}-${preset.height}`; button.className = "secondary"; button.textContent = preset.label;
+      button.onclick = () => {
+        const sizes: PixelSize[] = preset.sizes;
+        const edge = Math.max(Number(settings.width) || 0, Number(settings.height) || 0);
+        const nearest = sizes.reduce((best, size) => Math.abs(longEdge(size) - edge) < Math.abs(longEdge(best) - edge) ? size : best);
+        applySize(nearest);
+      };
+      presets.append(button);
+    }
     basic.append(presets);
+    const label = document.createElement("label"); label.textContent = "Pixel resolution";
+    const resolution = document.createElement("select"); resolution.id = "pixel-resolution"; resolution.setAttribute("aria-label", "Pixel resolution");
+    const hint = text("small", "");
+    label.append(resolution, hint); basic.append(label);
+    updatePixelChoices = () => {
+      const preset = (c.pixel_presets || []).find((p: PixelSize) => settings.width > 0 && settings.height > 0 && settings.width * p.height === settings.height * p.width);
+      const sizes: PixelSize[] = preset?.sizes || [];
+      // Present a short range of sizes; every choice comes from Rust's valid pairs.
+      // Keep an exact current pair visible even between the common choices.
+      const shown = new Map<string, PixelSize>();
+      for (const edge of [256, 384, 512, 640, 768, 896, 1024, 1152, 1280]) {
+        const size = sizes.filter(size => longEdge(size) <= edge).at(-1);
+        if (size) shown.set(identity(size), size);
+      }
+      const maximum = sizes.at(-1);
+      if (maximum) shown.set(identity(maximum), maximum);
+      const currentSize = sizes.find(size => size.width === settings.width && size.height === settings.height);
+      if (currentSize) shown.set(identity(currentSize), currentSize);
+      resolution.replaceChildren();
+      for (const size of [...shown.values()].sort((a, b) => longEdge(b) - longEdge(a))) {
+        resolution.append(new Option(`${dimensions(size)}${size === sizes.at(-1) ? " (maximum)" : ""}`, identity(size)));
+      }
+      const currentIdentity = `${settings.width}x${settings.height}`;
+      if (!currentSize) resolution.append(new Option(`${settings.width ?? "—"} × ${settings.height ?? "—"} (custom; see validation)`, currentIdentity));
+      resolution.value = currentIdentity;
+      resolution.disabled = sizes.length === 0;
+      hint.textContent = sizes.length ? `Common sizes for ${preset.label}; maximum ${dimensions(sizes[sizes.length - 1])}. Ratio buttons keep the closest allowed long edge. Other sizes can be entered above.` : "Choose an aspect ratio for resolution choices, or enter dimensions above. Current dimensions are retained.";
+      resolution.onchange = () => {
+        const size = sizes.find(size => identity(size) === resolution.value);
+        if (size) applySize(size);
+      };
+      presets.querySelectorAll("button").forEach(button => button.setAttribute("aria-pressed", String(button.textContent === preset?.label)));
+    };
+    updatePixelChoices();
   } else if (c.sizing === "ratio") {
     control("aspect_ratio", "Aspect ratio", c.aspect_ratios);
   }

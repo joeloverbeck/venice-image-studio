@@ -7,6 +7,25 @@ applicability. Examples establish documented requests, not measured effectivenes
 Unknown or conflicting optional controls remain unavailable. No owner content or
 paid model benchmark was used for this mapping.
 
+The sizing correction for [issue #6](https://github.com/joeloverbeck/venice-image-studio/issues/6)
+rechecked the [native endpoint](https://docs.venice.ai/api-reference/endpoint/image/generate)
+and [generation guide](https://docs.venice.ai/guides/media/image-generation) on
+2026-11-14. Pixel width and height remain positive integers at most 1280;
+ratio/tier routes retain their separate advertised values. The public catalog
+still matched the digest below: Chroma's current divisor is 8 (SD35/WAI: 16;
+Lustify entries/Z-Image Turbo: 8). Thus 3:4 can reach 960×1280. A model requiring
+multiples of 64 would allow at most 1024×576 at exact 16:9, not 1280×720.
+These are arithmetic consequences of the documented request contract, not paid
+provider acceptance or returned-size observations.
+
+Rust derives exact proportional pairs from the same bounds/divisor check used
+before dispatch. The UI offers common resolutions plus the maximum and current
+valid pair, and ratio buttons choose the valid pair closest to the current long
+edge (ties choose the smaller size). Manual dimensions remain editable, including
+custom proportions; changing model contracts never silently replaces them.
+Missing/invalid divisors provide no claimed valid pairs. Pixel choices still send
+only width/height, without adding a tier or aspect-ratio field to the recipe.
+
 The [current catalog](https://api.venice.ai/api/v1/models?type=image) matched research
 SHA-256 `faaf625846a2639e12ad5a9f1c251ea7993dea942adf3a8c29739c87d01c226e`.
 The [native schema](https://raw.githubusercontent.com/veniceai/api-docs/main/swagger.yaml)

@@ -5,6 +5,17 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
 pub const REQUEST_SOURCE: &str = "https://docs.venice.ai/api-reference/endpoint/image/generate";
+const PIXEL_MAX: u32 = 1280;
+
+fn valid_pixels(width: u32, height: u32, divisor: Option<u64>) -> bool {
+    width > 0
+        && height > 0
+        && width <= PIXEL_MAX
+        && height <= PIXEL_MAX
+        && divisor.is_some_and(|n| {
+            n > 0 && (width as u64).is_multiple_of(n) && (height as u64).is_multiple_of(n)
+        })
+}
 const PIXEL_MODELS: &[&str] = &[
     "venice-sd35",
     "lustify-sdxl",
@@ -213,14 +224,23 @@ pub fn contract(model: &Value) -> Value {
         .as_u64()
         .filter(|n| *n > 0);
     let presets: Vec<Value> = [
-        ("Square 1:1", 1024u64, 1024u64),
-        ("Portrait 3:4", 768, 1024),
-        ("Landscape 4:3", 1024, 768),
-        ("Wide 16:9", 1280, 720),
+        ("Square 1:1", 1u32, 1u32),
+        ("Portrait 3:4", 3, 4),
+        ("Landscape 4:3", 4, 3),
+        ("Wide 16:9", 16, 9),
     ]
     .into_iter()
-    .filter(|(_, w, h)| divisor.is_some_and(|n| w % n == 0 && h % n == 0))
-    .map(|(label, width, height)| json!({"label":label,"width":width,"height":height}))
+    .filter_map(|(label, w, h)| {
+        // Iterate the small schema bound, never provider-controlled ranges or products.
+        let sizes: Vec<Value> = (1..=PIXEL_MAX / w.max(h))
+            .filter_map(|scale| {
+                let (width, height) = (w * scale, h * scale);
+                valid_pixels(width, height, divisor).then(|| json!({"width":width,"height":height}))
+            })
+            .collect();
+        (!sizes.is_empty() && mode == "pixels")
+            .then(|| json!({"label":label,"width":w,"height":h,"sizes":sizes}))
+    })
     .collect();
     let defaults = Settings {
         sizing: mode.into(),
@@ -238,7 +258,7 @@ pub fn contract(model: &Value) -> Value {
             .map(String::from),
         ..Settings::default()
     };
-    json!({"sizing":mode,"pixel_max":1280,"variants_min":1,"variants_max":4,"divisor":constraints["widthHeightDivisor"],
+    json!({"sizing":mode,"pixel_max":PIXEL_MAX,"variants_min":1,"variants_max":4,"divisor":constraints["widthHeightDivisor"],
         "aspect_ratios":ratios,"resolutions":resolutions,"qualities":qualities,"formats":["png","jpeg","webp"],
         "seed":seed,"negative_prompt":negative,"steps":steps,"cfg_scale":cfg,"style_preset":style,
         "steps_max":constraints["steps"]["max"],"steps_default":constraints["steps"]["default"],"pixel_presets":presets,
@@ -331,14 +351,7 @@ pub fn prepare(
         ))
     } else if s.sizing == "pixels" {
         let divisor = c["divisor"].as_u64().filter(|n| *n > 0);
-        if divisor.is_none_or(|n| {
-            s.width == 0
-                || s.height == 0
-                || s.width > 1280
-                || s.height > 1280
-                || !(s.width as u64).is_multiple_of(n)
-                || !(s.height as u64).is_multiple_of(n)
-        }) {
+        if !valid_pixels(s.width, s.height, divisor) {
             errors.push("Pixel dimensions must be positive, at most 1280, and multiples of the model divisor.".into())
         }
         request["width"] = json!(s.width);

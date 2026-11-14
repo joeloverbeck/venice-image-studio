@@ -41,6 +41,38 @@ class WritingDesk(unittest.TestCase):
         self.browser('draft-status')
         self.assertEqual(seam.Provider.requests, [])
 
+    def test_proportional_resolution_reaches_request_and_restart_reuse(self):
+        self.browser('pixel-resolution')
+        request = seam.Provider.requests[0][1]
+        self.assertEqual((request['width'], request['height']), (960, 1280))
+        self.assertNotIn('aspect_ratio', request)
+        self.assertNotIn('resolution', request)
+        attempt = self.call('/api/state')['attempts'][0]
+        self.assertEqual(attempt['request'], request)
+        self.stop()
+        self.start()
+        reused = self.call('/api/attempts/' + attempt['id'] + '/reuse', {})
+        self.assertEqual((reused['settings']['width'], reused['settings']['height']), (960, 1280))
+        self.browser('pixel-resolution-reused')
+        self.assertEqual(len(seam.Provider.requests), 1)
+
+    def test_changed_divisor_retains_incompatible_draft_and_offers_legal_sizes(self):
+        draft = self.draft('Synthetic changed size constraint')
+        draft['settings'] = {'width': 1280, 'height': 720}
+        self.call('/api/draft', draft, 'PUT')
+        seam.Provider.catalog = [{'id': 'chroma', 'model_spec': {
+            'name': 'Chroma', 'offline': False, 'pricing': {'generation': {'usd': 0.02}},
+            'constraints': {'promptCharacterLimit': 5000, 'widthHeightDivisor': 64}}}]
+        self.call('/api/catalog/refresh', {})
+        self.browser('pixel-divisor')
+        for divisor in [None, 0, 1281, 2**64 - 1]:
+            seam.Provider.catalog[0]['model_spec']['constraints']['widthHeightDivisor'] = divisor
+            self.call('/api/catalog/refresh', {})
+            state = self.call('/api/state')
+            self.assertEqual(state['preflight']['contract']['pixel_presets'], [])
+            self.assertTrue(state['preflight']['errors'])
+        self.assertEqual(seam.Provider.requests, [])
+
     def test_waiting_status_remains_visible_during_library_inspection(self):
         draft = self.draft('Earlier saved image')
         earlier = self.finish(self.call('/api/generate', {'draft_id': draft['id']})['id'])

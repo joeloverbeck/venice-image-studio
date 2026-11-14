@@ -116,6 +116,11 @@ or explicitly choose **Use this model’s documented defaults** before generatin
 Pixel routes validate bounds/divisors; ratio routes send only advertised ratios,
 tiers and qualities. Requested size and actual returned dimensions stay separate:
 the first Chroma checkpoint requested 1024×1024 and returned 1536×1536.
+For pixel models, choose a ratio and then a **Pixel resolution** such as 960×1280
+at 3:4. Ratio buttons keep the closest allowed long edge; the dropdown shows common
+sizes and the maximum for that ratio. Manual width/height entry supports other
+sizes, and existing custom dimensions remain visible. Choices follow the selected
+model's divisor and native pixel bounds; they do not promise returned dimensions.
 
 One explicit Generate submits one attempt with one image by default. Advanced
 controls allow 1–4 images; the count reaches the total price estimate, request,

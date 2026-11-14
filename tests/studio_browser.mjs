@@ -45,6 +45,56 @@ try {
     await page.waitForFunction(() => document.querySelector('#prompt').value.endsWith('  unchanged ending\n'));
     assert.equal(await page.locator('#prompt').inputValue(), prompt);
     assert.equal(await page.locator('#setting-variants').inputValue(), '2');
+  } else if (process.env.SCENARIO === 'pixel-resolution') {
+    await page.locator('#prompt').fill('Synthetic proportional portrait');
+    await page.locator('#setting-width').fill('1280');
+    await page.locator('#setting-height').fill('1280');
+    await page.getByText('Draft saved locally.', {exact: true}).waitFor();
+    const portrait = page.getByRole('button', {name: 'Portrait 3:4', exact: true});
+    await portrait.click();
+    await page.getByText('Draft saved locally.', {exact: true}).waitFor();
+    assert.equal(await page.locator('#setting-width').inputValue(), '960', 'Choosing 3:4 retains the larger long edge');
+    assert.equal(await page.locator('#setting-height').inputValue(), '1280');
+    const resolution = page.getByLabel('Pixel resolution');
+    await resolution.focus();
+    await resolution.selectOption({label: '768 × 1024'});
+    await page.getByText('Draft saved locally.', {exact: true}).waitFor();
+    assert.equal(await focused('#pixel-resolution'), true);
+    await resolution.selectOption({label: '960 × 1280 (maximum)'});
+    await page.getByText('Draft saved locally.', {exact: true}).waitFor();
+    await portrait.click();
+    await page.getByText('Draft saved locally.', {exact: true}).waitFor();
+    assert.equal(await page.locator('#setting-height').inputValue(), '1280', 'Reselecting the same ratio cannot downgrade resolution');
+    if (process.env.STUDIO_SCREENSHOT_DIR) await page.screenshot({path: `${process.env.STUDIO_SCREENSHOT_DIR}/pixel-resolution-portrait.png`, fullPage: true});
+    await page.locator('#generate').click();
+    await page.waitForFunction(() => document.querySelector('#result-status').textContent.startsWith('saved:'));
+  } else if (process.env.SCENARIO === 'pixel-resolution-reused') {
+    assert.equal(await page.locator('#setting-width').inputValue(), '960');
+    assert.equal(await page.locator('#setting-height').inputValue(), '1280');
+    assert.equal(await page.getByLabel('Pixel resolution').locator('option:checked').innerText(), '960 × 1280 (maximum)');
+  } else if (process.env.SCENARIO === 'pixel-divisor') {
+    assert.equal(await page.locator('#setting-width').inputValue(), '1280', 'Changed model constraints never silently substitute saved dimensions');
+    assert.equal(await page.locator('#setting-height').inputValue(), '720');
+    assert.equal(await page.locator('#generate').isDisabled(), true);
+    assert.match(await page.getByLabel('Pixel resolution').locator('option:checked').innerText(), /1280 × 720.*custom/);
+    await page.getByRole('button', {name: 'Wide 16:9', exact: true}).click();
+    await page.getByText('Draft saved locally.', {exact: true}).waitFor();
+    assert.equal(await page.locator('#setting-width').inputValue(), '1024');
+    assert.equal(await page.locator('#setting-height').inputValue(), '576');
+    assert.equal(await page.getByLabel('Pixel resolution').locator('option:checked').innerText(), '1024 × 576 (maximum)');
+    assert.equal(await page.locator('#generate').isEnabled(), true);
+    const width = page.locator('#setting-width');
+    await width.fill('');
+    await page.keyboard.type('1e');
+    await page.waitForFunction(() => document.querySelector('#draft-status').textContent.startsWith('Draft not saved'));
+    assert.equal(await width.evaluate(node => node.validity.badInput), true, 'Updating resolution choices preserves incomplete native input');
+    assert.equal(await focused('#setting-width'), true);
+    assert.equal(await page.locator('#generate').isDisabled(), true);
+    await width.fill('896');
+    await page.getByText('Draft saved locally.', {exact: true}).waitFor();
+    assert.equal(await focused('#setting-width'), true);
+    assert.match(await page.getByLabel('Pixel resolution').locator('option:checked').innerText(), /896 × 576.*custom/);
+    assert.equal(await page.locator('#generate').isEnabled(), true, 'Valid custom dimensions remain usable');
   } else if (process.env.SCENARIO === 'draft-number') {
     await page.locator('#prompt').fill('Synthetic draft control retention');
     await page.getByText('Draft saved locally.', {exact: true}).waitFor();
