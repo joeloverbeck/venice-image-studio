@@ -1,0 +1,11 @@
+{
+  "name": "venice-image-studio",
+  "private": true,
+  "scripts": {
+    "build": "tsc --noEmit && esbuild web/app.ts --bundle --outfile=web/dist/app.js"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12",
+    "typescript": "5.9.3"
+  }
+}

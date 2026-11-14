@@ -48,8 +48,9 @@ If applicable text cannot be located or read, substantive work is not authorized
 
 Read `README.md` and the five documents in `docs/foundation/` for the accepted
 product scope. `docs/research/` is dated reference evidence, not runtime provider
-truth or an implementation backlog. This repository currently contains foundations
-only; no application or paid API verification exists yet.
+truth or an implementation backlog. A narrow running application candidate is
+documented in `README.md`; issue #1 owns the complete delivery boundary. Paid API and owner acceptance evidence must
+be recorded explicitly in the active issue.
 
 GitHub Issues and pull requests at `joeloverbeck/venice-image-studio` own active
 work once implementation is selected. A document or readiness label does not

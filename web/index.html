@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Venice Image Studio</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <header>
+      <p class="eyebrow">VENICE IMAGE STUDIO</p>
+      <h1>Writing desk</h1>
+      <p>Compose, generate and keep your originals.</p>
+    </header>
+    <nav class="workspace-nav" aria-label="Writing desk">
+      <a href="#prompt">Prompt</a><a href="#result-status">Result</a><a href="#library-search">Library</a>
+    </nav>
+    <div id="notice" role="status" aria-live="polite"></div>
+    <aside id="activity" class="activity" aria-label="Latest attempt and saving" aria-live="polite"></aside>
+    <main>
+      <section class="compose">
+        <h2>Your prompt</h2>
+        <label for="prompt">Describe the image</label
+        ><textarea
+          id="prompt"
+          disabled
+          rows="16"
+          placeholder="Write your full prompt…"
+        ></textarea>
+        <p id="count"></p>
+        <p id="draft-status" role="status">Loading saved draft…</p>
+        <div class="options">
+          <h2>Generation</h2>
+          <p id="model"></p>
+          <button id="browse-models" class="secondary" disabled>Browse and compare models</button>
+          <button id="model-defaults" class="secondary" disabled>Use this model’s documented defaults</button>
+          <p id="model-warning"></p>
+          <div id="settings"></div>
+          <label><input id="safe" type="checkbox" disabled /> Safe mode</label>
+          <p>Enhancement off. Optional search and optimization start off. Model-internal rewriting may still occur.</p>
+          <div id="preflight" role="status" aria-live="polite"></div>
+          <p id="estimate"></p>
+          <button id="refresh" class="secondary" disabled>Refresh catalog</button
+          ><button id="generate" disabled>Generate one image</button>
+        </div>
+        <details>
+          <summary>Local retention and privacy</summary>
+          <p>
+            Prompts, recipes and originals are kept locally with private
+            permissions, without encryption. Provider privacy claims do not
+            delete your local library. Downloads preserve the original, which
+            may already include provider metadata. Recipes and diagnostics are
+            separate.
+          </p>
+        </details>
+        <h2>Library</h2>
+        <p id="library-path"></p>
+        <p>Kept locally without automatic cleanup. Provider retention claims do not remove your saved work.</p>
+        <label for="library-search">Search saved prompts or models</label>
+        <input id="library-search" type="search" disabled placeholder="Prompt text, model name or ID…" />
+        <label for="library-order">Date order</label>
+        <select id="library-order" disabled><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select>
+        <p id="library-count" role="status"></p>
+        <div id="attempts"></div>
+      </section>
+      <section class="result">
+        <h2>Result</h2>
+        <p id="requested"></p>
+        <p id="result-status" tabindex="-1" role="status">Your result will appear here.</p>
+        <div id="images"></div>
+        <div id="result-actions"></div>
+        <details>
+          <summary>Recipe and provider details</summary>
+          <pre id="recipe">Choose an attempt to inspect its recipe.</pre>
+        </details>
+      </section>
+    </main>
+    <dialog id="original-inspector" aria-labelledby="inspector-title">
+      <div id="inspector-surface">
+      <div class="dialog-header"><h2 id="inspector-title">Original image</h2><button id="close-inspector" class="secondary">Close inspector</button></div>
+      <p id="inspector-metadata"></p>
+      <aside id="inspector-activity" class="activity" aria-label="Latest attempt and saving" aria-live="polite"></aside>
+      <div class="inspector-toolbar">
+        <button id="inspector-fit" class="secondary">Fit to view</button><button id="inspector-actual" class="secondary">100%</button>
+        <button id="inspector-out" class="secondary" aria-label="Zoom out">−</button><output id="inspector-zoom" aria-live="polite"></output><button id="inspector-in" class="secondary" aria-label="Zoom in">+</button>
+        <button id="inspector-fullscreen" class="secondary">Fullscreen</button><a id="inspector-download" class="download">Download original</a>
+      </div>
+      <div id="inspector-viewport" tabindex="0" role="region" aria-label="Original image pan and zoom" aria-describedby="inspector-help"><img id="inspector-image" alt="Saved original" draggable="false" /></div>
+      <p id="inspector-help">Drag to pan; scroll to zoom. Keyboard: arrows pan, +/− zoom, 0 fits, 1 shows 100%, Escape closes.</p>
+      <details><summary>Prompt and submitted settings</summary><pre id="inspector-recipe"></pre></details>
+      </div>
+    </dialog>
+    <dialog id="model-browser" aria-labelledby="browser-title">
+      <div class="dialog-header"><h2 id="browser-title">Choose a model</h2><button id="close-models" class="secondary">Close</button></div>
+      <p>Vendor claims and dated guidance are attributed. No model-wide benchmark or guaranteed acceptance is implied.</p>
+      <aside id="model-activity" class="activity" aria-label="Latest attempt and saving" aria-live="polite"></aside>
+      <label for="model-search">Search names, IDs and practical guidance</label>
+      <input id="model-search" type="search" placeholder="Photography, anime, typography, model ID…" />
+      <div class="filters">
+        <label>Uncensored positioning<select id="filter-uncensored" aria-label="Uncensored positioning"><option value="">All</option><option value="asserted">Venice assertion</option><option value="unknown">Unknown</option><option value="not_asserted">Explicit negative flag</option><option value="conflicting">Conflicting dated claims</option></select></label>
+        <label>Venice privacy<select id="filter-privacy" aria-label="Venice privacy"><option value="">All</option><option value="private">Private claim</option><option value="anonymized">Anonymized claim</option><option value="unknown">Unknown</option></select></label>
+        <label>Upstream retention<select id="filter-upstream_retention" aria-label="Upstream retention"><option value="">All</option><option value="zero_retention_claim">Venice zero-retention assertion</option><option value="unknown">Unknown</option></select></label>
+        <label>Additional protection<select id="filter-additional_protection" aria-label="Additional protection"><option value="">All</option><option value="unknown">Unknown / not established for images</option></select></label>
+      </div>
+      <p id="catalog-age"></p><p id="model-results-count" role="status"></p>
+      <div class="model-browser-body"><div id="model-list"></div><article id="model-detail" tabindex="-1" aria-label="Model details"></article></div>
+    </dialog>
+  </body>
+</html>
