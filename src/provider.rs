@@ -73,7 +73,31 @@ impl Provider {
             return Err("Catalog has an unknown shape.".into());
         }
         Ok(
-            json!({"fetched_at":chrono::Utc::now().to_rfc3339(),"source":CATALOG_SOURCE,"models":self.redact(&v["data"])}),
+            json!({"fetched_at":chrono::Utc::now().to_rfc3339(),"source":CATALOG_SOURCE,"models":self.redact_metadata(&v["data"])}),
+        )
+    }
+    pub async fn styles(&self) -> Result<Value, String> {
+        let response = self
+            .client
+            .get(format!("{}/image/styles", self.base))
+            .timeout(Duration::from_secs(20))
+            .send()
+            .await
+            .map_err(|_| "Styles refresh could not reach Venice; cached styles are unchanged.")?;
+        if !response.status().is_success() {
+            return Err("Venice rejected styles refresh; cached styles are unchanged.".into());
+        }
+        let bytes = bounded(response, 4 * 1024 * 1024).await?;
+        let value: Value =
+            serde_json::from_slice(&bytes).map_err(|_| "Styles were not valid JSON.")?;
+        if !value["data"]
+            .as_array()
+            .is_some_and(|a| a.iter().all(Value::is_string))
+        {
+            return Err("Styles have an unknown shape; cached styles are unchanged.".into());
+        }
+        Ok(
+            json!({"fetched_at":chrono::Utc::now().to_rfc3339(),"source":"https://api.venice.ai/api/v1/image/styles","data":self.redact_metadata(&value["data"])}),
         )
     }
     pub async fn generate(&self, request: &Value) -> Result<(u16, Value, Value), String> {
@@ -105,7 +129,7 @@ impl Provider {
                 }
             }
         }
-        let body = match bounded(response, 128 * 1024 * 1024).await {
+        let body = match bounded(response, 192 * 1024 * 1024).await {
             Ok(bytes) => serde_json::from_slice(&bytes).unwrap_or_else(|_|json!({"raw_text":String::from_utf8_lossy(&bytes[..bytes.len().min(32768)]),"capture_truncated":bytes.len()>32768})),
             Err(message) => json!({"capture_error":message,"body_incomplete":true}),
         };
@@ -114,6 +138,37 @@ impl Provider {
     #[cfg(feature = "test-support")]
     pub fn is_fixture(&self) -> bool {
         self.base.starts_with("http:")
+    }
+    fn redact_metadata(&self, value: &Value) -> Value {
+        match value {
+            Value::Array(a) => Value::Array(a.iter().map(|v| self.redact_metadata(v)).collect()),
+            Value::Object(o) => Value::Object(
+                o.iter()
+                    .map(|(key, value)| {
+                        let redacted_key = self
+                            .redact(&Value::String(key.clone()))
+                            .as_str()
+                            .unwrap()
+                            .to_owned();
+                        let value = if [
+                            "authorization",
+                            "api_key",
+                            "access_token",
+                            "token",
+                            "secret",
+                        ]
+                        .contains(&key.to_lowercase().as_str())
+                        {
+                            json!("[redacted]")
+                        } else {
+                            self.redact_metadata(value)
+                        };
+                        (redacted_key, value)
+                    })
+                    .collect(),
+            ),
+            v => self.redact(v),
+        }
     }
     pub fn redact(&self, value: &Value) -> Value {
         match value {

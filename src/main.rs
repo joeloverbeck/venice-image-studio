@@ -1,4 +1,5 @@
 mod library;
+mod models;
 mod provider;
 use axum::{
     Json, Router,
@@ -23,6 +24,7 @@ use std::{
 };
 use uuid::Uuid;
 
+const MAX_ORIGINAL_BYTES: usize = 96 * 1024 * 1024;
 type App = Arc<Studio>;
 type ApiResult<T> = Result<Json<T>, (StatusCode, Json<Value>)>;
 fn error(status: StatusCode, message: impl Into<String>) -> (StatusCode, Json<Value>) {
@@ -42,6 +44,8 @@ struct Draft {
     model: String,
     #[serde(default)]
     parent_id: Option<Uuid>,
+    #[serde(default)]
+    settings: models::Settings,
 }
 impl Default for Draft {
     fn default() -> Self {
@@ -51,6 +55,7 @@ impl Default for Draft {
             safe_mode: false,
             model: "chroma".into(),
             parent_id: None,
+            settings: models::Settings::default(),
         }
     }
 }
@@ -77,6 +82,12 @@ struct Attempt {
     request: Value,
     omitted_fields: Vec<String>,
     model_snapshot: Value,
+    #[serde(default)]
+    model_evidence: Value,
+    #[serde(default)]
+    control_contract: Value,
+    #[serde(default)]
+    styles_evidence: Value,
     catalog_source: Value,
     catalog_fetched_at: Value,
     estimate: Value,
@@ -94,6 +105,8 @@ struct Memory {
     draft: Draft,
     catalog: Value,
     catalog_error: Option<String>,
+    styles: Value,
+    styles_error: Option<String>,
     attempts: BTreeMap<Uuid, Attempt>,
     inflight: Option<Uuid>,
     bytes: BTreeMap<Uuid, Vec<u8>>,
@@ -159,6 +172,8 @@ async fn run() -> Result<(), String> {
         draft: Draft::default(),
         catalog: Value::Null,
         catalog_error: None,
+        styles: Value::Null,
+        styles_error: None,
         attempts: BTreeMap::new(),
         inflight: None,
         bytes: BTreeMap::new(),
@@ -170,10 +185,15 @@ async fn run() -> Result<(), String> {
         {
             memory.draft = d;
         }
-        if let Ok(bytes) = l.read("catalog.json", 4 * 1024 * 1024)
+        if let Ok(bytes) = l.read("catalog.json", 16 * 1024 * 1024)
             && let Ok(c) = serde_json::from_slice(&bytes)
         {
             memory.catalog = c;
+        }
+        if let Ok(bytes) = l.read("styles.json", 8 * 1024 * 1024)
+            && let Ok(styles) = serde_json::from_slice(&bytes)
+        {
+            memory.styles = styles;
         }
         for name in l.recipes()? {
             let bytes = l.read(&name, 512 * 1024)?;
@@ -187,7 +207,7 @@ async fn run() -> Result<(), String> {
             if a.status == "saving" || a.status == "save_failed" {
                 let all = !a.results.is_empty()
                     && a.results.iter().all(|r| {
-                        l.read(&r.relative_path, 32 * 1024 * 1024)
+                        l.read(&r.relative_path, MAX_ORIGINAL_BYTES as u64)
                             .is_ok_and(|b| hash(&b) == r.sha256)
                     });
                 if all {
@@ -302,34 +322,24 @@ async fn css() -> impl IntoResponse {
         include_str!("../web/style.css"),
     )
 }
+fn cache_age(cache: &Value) -> Option<i64> {
+    cache["fetched_at"]
+        .as_str()
+        .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
+        .map(|time| (Utc::now() - time.with_timezone(&Utc)).num_seconds().max(0))
+}
 async fn state(State(app): State<App>) -> Json<Value> {
     let m = app.state.lock().unwrap();
-    let estimate = first_path_estimate(&m.catalog, &m.draft.model)
-        .unwrap_or_else(|reason| json!({"unavailable_reason":reason}));
-    Json(
-        json!({"token":app.token,"draft":m.draft,"catalog":m.catalog,"estimate":estimate,"catalog_error":m.catalog_error,"attempts":m.attempts.values().rev().collect::<Vec<_>>(),"inflight":m.inflight,"setup_error":m.setup,"credential_present":app.provider.key.is_some(),"library":app.library.as_ref().map(|l|l.root.display().to_string())}),
-    )
-}
-fn first_path_estimate(catalog: &Value, model_id: &str) -> Result<Value, &'static str> {
-    if model_id != "chroma" {
-        return Err("This first slice supports the selected Chroma generation path.");
-    }
-    let model = catalog["models"]
+    let model = m.catalog["models"]
         .as_array()
-        .and_then(|models| models.iter().find(|model| model["id"] == model_id))
-        .ok_or("Refresh the catalog; selected model is unavailable.")?;
-    let pricing = &model["model_spec"]["pricing"];
-    let price = pricing["generation"]["usd"]
-        .as_f64()
-        .filter(|price| price.is_finite() && *price >= 0.0)
-        .ok_or("No usable estimate is available; refresh the catalog before spending.")?;
-    if !pricing["resolutions"].is_null() || !pricing["quality"].is_null() {
-        return Err("The selected model's pricing contract changed; this request needs review.");
-    }
-    Ok(
-        json!({"usd":price,"source":catalog["source"],"fetched_at":catalog["fetched_at"],"kind":"estimate, not charge or cap"}),
+        .and_then(|a| a.iter().find(|v| v["id"] == m.draft.model))
+        .cloned();
+    let (errors, request, estimate) = model.as_ref().map(|model|models::prepare(&m.catalog,model,&m.styles,&m.draft.prompt,m.draft.safe_mode,&m.draft.settings)).unwrap_or_else(||(vec!["Selected model is unavailable. Refresh the catalog or explicitly select another model.".into()],Value::Null,json!({"unavailable_reason":"Selected model is unavailable."})));
+    Json(
+        json!({"token":app.token,"draft":m.draft,"catalog":m.catalog,"models":models::views(&m.catalog,&m.draft.model),"estimate":estimate,"preflight":{"draft_revision":hash(&serde_json::to_vec(&m.draft).unwrap()),"errors":errors,"request":request,"contract":model.as_ref().map(models::contract)},"catalog_age_seconds":cache_age(&m.catalog),"styles_age_seconds":cache_age(&m.styles),"catalog_error":m.catalog_error,"styles":m.styles,"styles_error":m.styles_error,"attempts":m.attempts.values().rev().collect::<Vec<_>>(),"inflight":m.inflight,"setup_error":m.setup,"credential_present":app.provider.key.is_some(),"library":app.library.as_ref().map(|l|l.root.display().to_string())}),
     )
 }
+
 async fn draft(State(app): State<App>, Json(d): Json<Draft>) -> ApiResult<Draft> {
     if d.prompt.chars().count() > 32768 {
         return Err(bad(
@@ -352,17 +362,68 @@ async fn draft(State(app): State<App>, Json(d): Json<Draft>) -> ApiResult<Draft>
     Ok(Json(d))
 }
 async fn refresh(app: &App) {
-    match app.provider.catalog().await {
-        Ok(c) => {
+    let (catalog, styles) = tokio::join!(app.provider.catalog(), app.provider.styles());
+    match catalog {
+        Ok(mut c) => {
+            let previous = app.state.lock().unwrap().catalog.clone();
+            let current = c["models"].as_array().unwrap();
+            let mut historical = std::collections::BTreeMap::new();
+            if let Some(entries) = previous["historical_models"].as_array() {
+                for entry in entries {
+                    let model = entry.get("model").unwrap_or(entry);
+                    if let Some(id) = model["id"].as_str()
+                        && !current.iter().any(|m| m["id"] == id)
+                    {
+                        historical.insert(
+                            id.to_owned(),
+                            if entry.get("model").is_some() {
+                                entry.clone()
+                            } else {
+                                json!({"model":model,"fetched_at":Value::Null})
+                            },
+                        );
+                    }
+                }
+            }
+            if let Some(models) = previous["models"].as_array() {
+                for model in models {
+                    if let Some(id) = model["id"].as_str()
+                        && !current.iter().any(|m| m["id"] == id)
+                    {
+                        historical.insert(
+                            id.to_owned(),
+                            json!({"model":model,"fetched_at":previous["fetched_at"]}),
+                        );
+                    }
+                }
+            }
+            c["historical_models"] = json!(historical.into_values().collect::<Vec<_>>());
+            let bytes = serde_json::to_vec(&c).unwrap();
+            if bytes.len() > 16 * 1024 * 1024 {
+                app.state.lock().unwrap().catalog_error=Some("Catalog plus retained historical metadata exceeds the local 16 MiB cache bound. Previous catalog retained.".into());
+            } else {
+                let result = app
+                    .library
+                    .as_ref()
+                    .map(|l| l.write("catalog.json", &bytes));
+                let mut m = app.state.lock().unwrap();
+                m.catalog = c;
+                m.catalog_error = result.and_then(Result::err);
+            }
+        }
+        Err(e) => app.state.lock().unwrap().catalog_error = Some(e),
+    }
+    match styles {
+        Ok(styles) => {
             let result = app
                 .library
                 .as_ref()
-                .map(|l| l.write("catalog.json", &serde_json::to_vec(&c).unwrap()));
+                .map(|l| l.write("styles.json", &serde_json::to_vec(&styles).unwrap()));
             let mut m = app.state.lock().unwrap();
-            m.catalog = c;
-            m.catalog_error = result.and_then(Result::err);
+            m.styles = styles;
+            m.styles_error = result.and_then(Result::err);
         }
-        Err(e) => app.state.lock().unwrap().catalog_error = Some(e),
+        Err(e) => app.state.lock().unwrap().styles_error = Some(e),
     }
 }
 async fn refresh_route(State(app): State<App>) -> Json<Value> {
@@ -372,6 +433,7 @@ async fn refresh_route(State(app): State<App>) -> Json<Value> {
 #[derive(Deserialize)]
 struct Generate {
     draft_id: Uuid,
+    draft_revision: String,
     catalog_fetched_at: String,
 }
 async fn generate(State(app): State<App>, Json(g): Json<Generate>) -> ApiResult<Attempt> {
@@ -384,6 +446,12 @@ async fn generate(State(app): State<App>, Json(g): Json<Generate>) -> ApiResult<
             return Err(error(
                 StatusCode::CONFLICT,
                 "Catalog changed. Inspect the refreshed estimate and settings before generating.",
+            ));
+        }
+        if hash(&serde_json::to_vec(&m.draft).unwrap()) != g.draft_revision {
+            return Err(error(
+                StatusCode::CONFLICT,
+                "Draft choices changed. Inspect the current estimate and settings before generating.",
             ));
         }
         if m.inflight.is_some() {
@@ -408,46 +476,44 @@ async fn generate(State(app): State<App>, Json(g): Json<Generate>) -> ApiResult<
                 "Draft changed. Reload and inspect it before generation.",
             ));
         }
-        if d.model != "chroma" {
-            return Err(bad(
-                "This first slice supports the selected Chroma generation path.",
-            ));
-        }
-        let model = m.catalog["models"]
-            .as_array()
-            .and_then(|a| a.iter().find(|v| v["id"] == d.model))
-            .ok_or_else(|| bad("Refresh the catalog; selected model is unavailable."))?
-            .clone();
-        if model["model_spec"]["offline"] != false {
-            return Err(bad("Selected model availability is unknown or offline."));
-        }
+        let model = m.catalog["models"].as_array().and_then(|a|a.iter().find(|v|v["id"]==d.model)).ok_or_else(||bad("Selected model is unavailable. Refresh the catalog or explicitly select another model."))?.clone();
         if serde_json::to_vec(&model).unwrap().len() > 65536 {
             return Err(bad(
                 "Selected model metadata exceeds the local capture bound.",
             ));
         }
-        let spec = &model["model_spec"];
-        let limit = spec["constraints"]["promptCharacterLimit"]
-            .as_u64()
-            .ok_or_else(|| bad("Selected model's prompt limit is unknown."))?;
-        if d.prompt.is_empty() || d.prompt.chars().count() as u64 > limit {
-            return Err(bad(format!(
-                "Prompt must contain 1–{limit} Unicode scalar characters."
-            )));
+        let (errors, request, estimate) = models::prepare(
+            &m.catalog,
+            &model,
+            &m.styles,
+            &d.prompt,
+            d.safe_mode,
+            &d.settings,
+        );
+        if !errors.is_empty() {
+            return Err(bad(errors.join(" ")));
         }
-        let divisor = spec["constraints"]["widthHeightDivisor"]
-            .as_u64()
-            .filter(|n| *n > 0)
-            .ok_or_else(|| bad("Selected model's size constraint is unknown."))?;
-        if 1024 % divisor != 0 {
-            return Err(bad(
-                "Refreshed model no longer supports the selected 1024-pixel size.",
-            ));
-        }
-        let estimate = first_path_estimate(&m.catalog, &d.model).map_err(bad)?;
-        let request = json!({"model":d.model,"prompt":d.prompt,"width":1024,"height":1024,"variants":1,"safe_mode":d.safe_mode,"enhance_prompt":false,"return_binary":false,"embed_exif_metadata":false,"format":"png"});
+        let omitted_fields = [
+            "seed",
+            "negative_prompt",
+            "steps",
+            "cfg_scale",
+            "style_preset",
+            "enable_web_search",
+            "disable_prompt_optimization_thinking",
+            "width",
+            "height",
+            "aspect_ratio",
+            "resolution",
+            "quality",
+            "transparent_background",
+        ]
+        .into_iter()
+        .filter(|key| request.get(key).is_none())
+        .map(String::from)
+        .collect();
         let a = Attempt {
-            recipe_version: 1,
+            recipe_version: 2,
             app_version: env!("CARGO_PKG_VERSION").into(),
             id: d.id,
             created_at: now(),
@@ -456,22 +522,19 @@ async fn generate(State(app): State<App>, Json(g): Json<Generate>) -> ApiResult<
             parent_id: d.parent_id,
             prompt: d.prompt.clone(),
             request,
-            omitted_fields: [
-                "seed",
-                "negative_prompt",
-                "steps",
-                "cfg_scale",
-                "style_preset",
-                "enable_web_search",
-                "disable_prompt_optimization_thinking",
-            ]
-            .map(String::from)
-            .to_vec(),
+            omitted_fields,
+            model_evidence: models::describe(&model, "available", &m.catalog["fetched_at"]),
+            control_contract: models::contract(&model),
+            styles_evidence: if d.settings.style_preset.is_some() {
+                json!({"source":m.styles["source"],"fetched_at":m.styles["fetched_at"],"selected":d.settings.style_preset})
+            } else {
+                Value::Null
+            },
             model_snapshot: model,
             catalog_source: m.catalog["source"].clone(),
             catalog_fetched_at: m.catalog["fetched_at"].clone(),
             estimate,
-            requested_seed: None,
+            requested_seed: d.settings.seed,
             returned_seed: Value::Null,
             outcome: "pending".into(),
             outcome_summary: "Waiting for Venice.".into(),
@@ -598,7 +661,7 @@ fn persist_attempt(app: &App, m: &mut Memory, id: Uuid) {
                     std::process::exit(86);
                 }
             } else {
-                let bytes = l.read(&r.relative_path, 32 * 1024 * 1024)?;
+                let bytes = l.read(&r.relative_path, MAX_ORIGINAL_BYTES as u64)?;
                 if hash(&bytes) != r.sha256 {
                     return Err("Original hash does not match the recipe.".into());
                 }
@@ -639,13 +702,13 @@ fn hash(bytes: &[u8]) -> String {
 }
 fn decode(value: &Value) -> Result<(ResultImage, Vec<u8>), String> {
     let text = value.as_str().ok_or("Image is not base64 text.")?;
-    if text.len() > 44 * 1024 * 1024 {
+    if text.len() > MAX_ORIGINAL_BYTES.div_ceil(3) * 4 {
         return Err("Image exceeds decode limit.".into());
     }
     let bytes = base64::engine::general_purpose::STANDARD
         .decode(text)
         .map_err(|_| "Image is not valid base64.")?;
-    if bytes.len() > 32 * 1024 * 1024 {
+    if bytes.len() > MAX_ORIGINAL_BYTES {
         return Err("Image exceeds original-byte limit.".into());
     }
     let format = image::guess_format(&bytes).map_err(|_| "Unknown image type.")?;
@@ -700,9 +763,10 @@ async fn reuse(State(app): State<App>, Path(id): Path<Uuid>) -> ApiResult<Draft>
         Json(Draft {
             id: Uuid::new_v4(),
             prompt: a.prompt,
-            safe_mode: a.request["safe_mode"].as_bool().unwrap_or(false),
-            model: a.request["model"].as_str().unwrap_or("chroma").into(),
+            safe_mode: a.request["safe_mode"].as_bool().ok_or_else(||bad("Recipe safe-mode choice is missing or malformed; no settings were substituted."))?,
+            model: a.request["model"].as_str().filter(|id|!id.is_empty()).ok_or_else(||bad("Recipe model ID is missing or malformed; no model was substituted."))?.into(),
             parent_id: Some(a.id),
+            settings: models::Settings::from_request(&a.request).map_err(bad)?,
         }),
     )
     .await
@@ -732,7 +796,7 @@ async fn original(State(app): State<App>, Path(id): Path<Uuid>) -> Response {
     let bytes = m.bytes.get(&id).cloned().or_else(|| {
         app.library
             .as_ref()
-            .and_then(|l| l.read(&r.relative_path, 32 * 1024 * 1024).ok())
+            .and_then(|l| l.read(&r.relative_path, MAX_ORIGINAL_BYTES as u64).ok())
     });
     match bytes {
         Some(bytes) if hash(&bytes) == r.sha256 => Response::builder()
