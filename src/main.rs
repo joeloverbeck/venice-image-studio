@@ -219,6 +219,9 @@ async fn run() -> Result<(), String> {
                     a.summary="Save was interrupted. Only originals still available locally can be recovered; nothing was regenerated.".into();
                 }
             }
+            // Reinterpret retained response evidence for older recipes in memory only.
+            // Merely reopening an already-saved recipe must not rewrite its bytes.
+            explain_response_flags(&mut a);
             memory.attempts.insert(a.id, a);
         }
     }
@@ -640,6 +643,7 @@ async fn dispatch(app: App, id: Uuid) {
         a.outcome = a.status.clone();
     }
     a.outcome_summary = a.summary.clone();
+    explain_response_flags(&mut a);
     m.attempts.insert(id, a);
     m.inflight = None;
     persist_attempt(&app, &mut m, id);
@@ -669,7 +673,7 @@ fn persist_attempt(app: &App, m: &mut Memory, id: Uuid) {
         }
         if !a.results.is_empty() {
             a.status = "saved".into();
-            a.summary = if a.outcome == "partial" {
+            a.summary = if a.outcome == "partial" || a.outcome == "flagged" {
                 format!("{} Originals and recipe saved locally.", a.outcome_summary)
             } else {
                 "Originals and recipe saved locally.".into()
@@ -690,6 +694,40 @@ fn persist_attempt(app: &App, m: &mut Memory, id: Uuid) {
         }
     }
     m.attempts.insert(id, a);
+}
+fn explain_response_flags(a: &mut Attempt) {
+    let headers = &a.provider["headers"];
+    let flagged = headers["x-venice-is-content-violation"]
+        .as_str()
+        .is_some_and(|s| s.eq_ignore_ascii_case("true"));
+    let blurred = headers["x-venice-is-blurred"]
+        .as_str()
+        .is_some_and(|s| s.eq_ignore_ascii_case("true"));
+    if (!flagged && !blurred) || a.outcome_summary.contains("Response-wide flags:") {
+        return;
+    }
+    let flags = match (flagged, blurred) {
+        (true, true) => "content violation and blurred output",
+        (true, false) => "content violation",
+        _ => "blurred output",
+    };
+    let body = &a.provider["body"];
+    let reason = if ["reason", "error", "message"]
+        .iter()
+        .any(|key| !body[key].is_null())
+    {
+        "Inspect provider details for the supplied explanation."
+    } else {
+        "No specific reason was supplied."
+    };
+    let warning = format!(
+        "Response-wide flags: Venice reports {flags}. {reason} Flags do not identify individual images. Billing and refund are unknown."
+    );
+    if a.outcome == "received" {
+        a.outcome = "flagged".into();
+    }
+    a.outcome_summary = format!("{warning} {}", a.outcome_summary);
+    a.summary = format!("{warning} {}", a.summary);
 }
 fn save_recipe(l: &Library, a: &Attempt) -> Result<(), String> {
     l.write(
