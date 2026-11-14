@@ -76,10 +76,24 @@ class SavedWork(unittest.TestCase):
         self.assertEqual((self.library / (a['id'] + '.recipe.json')).read_bytes(), before)
         self.assertEqual(len(Provider.requests), 1)
 
-    def test_removed_model_reuse_preserves_lineage_and_history_without_dispatch(self):
+    def test_changed_then_removed_model_reuse_preserves_lineage_and_history_without_dispatch(self):
         d = self.draft('Historical choice remains identifiable')
         a = self.finish(self.call('/api/generate', {'draft_id': d['id']})['id'])
         recipe = (self.library / (a['id'] + '.recipe.json')).read_bytes()
+        Provider.catalog = [{'id': 'chroma', 'model_spec': {
+            'name': 'Chroma', 'offline': False, 'privacy': 'private',
+            'constraints': {'promptCharacterLimit': 5, 'widthHeightDivisor': 16},
+            'pricing': {'generation': {'usd': 0.02}},
+        }}]
+        self.call('/api/catalog/refresh', {})
+        changed = self.call('/api/attempts/' + a['id'] + '/reuse', {})
+        self.assertEqual(changed['prompt'], d['prompt'])
+        self.assertEqual(changed['settings']['width'], 1024)
+        self.assertTrue(self.call('/api/state')['preflight']['errors'])
+        with self.assertRaises(urllib.error.HTTPError):
+            self.call('/api/generate', {'draft_id': changed['id']})
+        self.assertEqual((self.library / (a['id'] + '.recipe.json')).read_bytes(), recipe)
+        self.assertEqual(len(Provider.requests), 1)
         self.stop()
         Provider.catalog = []
         self.start()
