@@ -52,7 +52,7 @@ The application license does not determine provider terms or generated-image rig
 
 ## Run locally
 
-Requires Ubuntu, Rust/Cargo (edition 2024; checked with 1.97.1), a C compiler/linker,
+Requires Ubuntu, Rust/Cargo (edition 2024; checked with 1.100.0), a C compiler/linker,
 Node.js 24, npm and a current desktop browser. The first build downloads pinned
 dependencies; generation and catalog refresh need access to Venice. Clone the
 repository and run the following from its root. No sibling checkout or separate
